@@ -1,0 +1,15 @@
+
+_format_version: "2.1"
+
+services:
+  - name: supabase-auth
+    url: http://supabase-auth:9999
+    routes:
+      - paths: ["/auth"]
+
+  - name: supabase-rest
+    url: http://supabase-rest:3000
+    routes:
+      - paths: ["/rest"]
+
+# Add other Supabase services as needed

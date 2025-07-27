@@ -1,0 +1,77 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "playwright-mcp"
+      ],
+      "env": {},
+      "disabled": false,
+      "alwaysAllow": [
+        "get-full-dom",
+        "get-screenshot",
+        "execute-code",
+        "init-browser",
+        "get-context",
+        "browser_navigate",
+        "browser_take_screenshot",
+        "browser_get_element_screenshot"
+      ]
+    }
+  },
+  "rules": [
+    "Always respond in 日本語",
+    "Always be aware that rails is running on docker",
+    "Always deliver maximum performance",
+    "Always think very hard",
+    "Use Playwright for web automation and testing when needed",
+    "Follow Rails best practices and conventions",
+    "Prioritize code quality and maintainability",
+    "Consider Docker environment constraints",
+    "Provide clear explanations for technical decisions",
+    "Suggest improvements and optimizations when appropriate"
+  ],
+  "projectSettings": {
+    "framework": "rails",
+    "environment": "docker",
+    "testing": "playwright",
+    "language": "ruby",
+    "frontend": "javascript/typescript"
+  },
+  "aiSettings": {
+    "model": "claude-3.5-sonnet",
+    "temperature": 0.1,
+    "maxTokens": 4000,
+    "contextWindow": 200000
+  },
+  "fileAssociations": {
+    "*.rb": "ruby",
+    "*.erb": "erb",
+    "*.js": "javascript",
+    "*.ts": "typescript",
+    "*.yml": "yaml",
+    "*.yaml": "yaml",
+    "*.json": "json",
+    "*.md": "markdown"
+  },
+  "excludePatterns": [
+    "node_modules/**",
+    "vendor/**",
+    "tmp/**",
+    "log/**",
+    ".git/**",
+    "coverage/**",
+    "public/assets/**"
+  ],
+  "includePatterns": [
+    "app/**/*",
+    "config/**/*",
+    "db/**/*",
+    "lib/**/*",
+    "spec/**/*",
+    "test/**/*",
+    "frontend/**/*",
+    "backend/**/*",
+    "scripts/**/*"
+  ]
+} 
