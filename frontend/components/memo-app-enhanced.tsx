@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
   Users, User, Plus, Settings, HelpCircle, LogOut, Search, ArrowUpDown, FilePenLine, Lock, Menu, X, Palette, Keyboard, Check, Trash2, Share2
 } from "lucide-react";
@@ -15,6 +15,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+
+// 認証関連のインポート
+import { useAuth } from "@/lib/auth-context";
+import { UserProfileDialog } from "@/components/auth/user-profile-dialog";
+
+// ダイアログコンポーネントのインポート
+import { MemoEditDialog } from "@/components/memo/memo-edit-dialog";
+import { MemoDeleteDialog } from "@/components/memo/memo-delete-dialog";
+import { GroupSettingsDialog } from "@/components/group/group-settings-dialog";
+
+// リアルタイム関連のインポート（一時的に無効化）
+// import { useMemoRealtime } from "@/hooks/useRealtime";
+// import { UserPresenceIndicator } from "@/components/realtime/user-presence-indicator";
+// import { MemoRealtimeEvent } from "@/lib/realtime";
+// import { useRealtimeNotifications } from "@/components/notification/notification-provider";
 
 // APIクライアントのインポート
 import { apiClient, Memo as ApiMemo, CreateMemoDto, UpdateMemoDto } from "@/lib/api";
@@ -36,22 +51,28 @@ const CURRENT_USER_ID = 'dc9282c0-707f-4030-888d-cb1d414108f7';
 // =================================================================
 // コンポーネント 1: サイドバー（Sheetの中身）
 // =================================================================
-const SidebarContent = ({ onOpenSettings }: { onOpenSettings: () => void }) => (
+const SidebarContent = ({ onOpenSettings, onOpenProfile }: { onOpenSettings: () => void; onOpenProfile: () => void }) => {
+  const { user } = useAuth();
+  
+  return (
   <aside className="flex flex-col h-full border-l bg-background">
     <div className="flex h-14 items-center border-b p-2 justify-between">
         <h2 className="font-bold text-lg ml-2">Notetree</h2>
         </div>
     <div className="flex flex-col p-2 space-y-2 flex-1">
-        <div className="flex items-center p-2">
+          <button 
+            onClick={onOpenProfile}
+            className="flex items-center p-2 hover:bg-muted rounded-lg transition-colors"
+          >
             <Avatar className="mr-3">
-                <AvatarImage src="https://github.com/shadcn.png" alt="User Avatar" />
-                <AvatarFallback>U</AvatarFallback>
+                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || user?.email || 'ユーザー'} />
+                  <AvatarFallback>{user?.user_metadata?.name?.[0] || user?.email?.[0] || 'U'}</AvatarFallback>
             </Avatar>
-            <div>
-                <p className="font-semibold text-sm">デモユーザー</p>
-                <p className="text-xs text-muted-foreground">user@example.com</p>
+              <div className="text-left">
+                  <p className="font-semibold text-sm">{user?.user_metadata?.name || 'ユーザー'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
           </div>
-        </div>
+          </button>
         <Separator/>
         <div>
             <h3 className="text-xs font-semibold text-muted-foreground my-2 px-2 flex items-center"><Users className="w-4 h-4 mr-2" />グループ</h3>
@@ -86,6 +107,7 @@ const SidebarContent = ({ onOpenSettings }: { onOpenSettings: () => void }) => (
     </div>
   </aside>
 );
+};
 
 // =================================================================
 // コンポーネント 2: メモ一覧の各アイテム
@@ -344,8 +366,23 @@ export default function App() {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [allTags, setAllTags] = useState<string[]>([]);
+
+  // メモダイアログの状態
+  const [isMemoEditDialogOpen, setMemoEditDialogOpen] = useState(false);
+  const [isMemoDeleteDialogOpen, setMemoDeleteDialogOpen] = useState(false);
+  const [editingMemo, setEditingMemo] = useState<Memo | null>(null);
+  const [deletingMemo, setDeletingMemo] = useState<Memo | null>(null);
+
+  // グループダイアログの状態
+  const [isGroupSettingsDialogOpen, setGroupSettingsDialogOpen] = useState(false);
+
+  // リアルタイム機能の状態
+  const [currentGroupId, setCurrentGroupId] = useState<string | null>(null);
+  const [userPresences, setUserPresences] = useState<Map<string, any>>(new Map());
+  const [connectedUsers, setConnectedUsers] = useState<Map<string, { name: string; email: string; avatar?: string }>>(new Map());
 
   // 全タグを更新する関数
   const updateAllTags = (memos: Memo[]) => {
@@ -396,7 +433,7 @@ export default function App() {
     }
   };
 
-  // 新しいメモを作成
+  // 新しいメモを作成（既存の空メモ作成）
   const createMemo = async () => {
     try {
       const newMemoData: CreateMemoDto = {
@@ -429,6 +466,8 @@ export default function App() {
       console.error('Failed to create memo:', error);
     }
   };
+
+
 
   // メモを更新
   const updateMemo = async (id: string, updates: UpdateMemoDto) => {
@@ -502,9 +541,54 @@ export default function App() {
     }, 150);
   };
 
+  const handleOpenProfile = () => {
+    setSidebarOpen(false); 
+    setTimeout(() => {
+        setProfileDialogOpen(true);
+    }, 150);
+  };
+
+  // メモダイアログハンドラー
+  const handleOpenMemoCreate = () => {
+    // ダイアログを表示せずに直接メモを作成
+    createMemo();
+  };
+
+  const handleOpenMemoEdit = (memo: Memo) => {
+    setEditingMemo(memo);
+    setMemoEditDialogOpen(true);
+  };
+
+  const handleOpenMemoDelete = (memo: Memo) => {
+    setDeletingMemo(memo);
+    setMemoDeleteDialogOpen(true);
+  };
+
+  // グループダイアログハンドラー
+  const handleOpenGroupSettings = () => {
+    setSidebarOpen(false);
+    setTimeout(() => {
+        setGroupSettingsDialogOpen(true);
+    }, 150);
+  };
+
+  // リアルタイム機能は一時的に無効化
+
+  // リアルタイム購読（一時的に無効化）
+  // const { isConnected } = useMemoRealtime(currentGroupId, handleMemoRealtimeEvent);
+  
+  // リアルタイム通知（一時的に無効化）
+  // const {
+  //   notifyMemoCreated,
+  //   notifyMemoUpdated,
+  //   notifyMemoDeleted,
+  //   notifyError,
+  //   notifySuccess
+  // } = useRealtimeNotifications();
+
   const handleDeleteMemo = () => {
     if (!selectedMemo) return;
-    deleteMemo(selectedMemo.id);
+    handleOpenMemoDelete(selectedMemo);
   };
 
   const handleTogglePrivacy = () => {
@@ -557,7 +641,7 @@ export default function App() {
                 onSort={setSortKey}
                 onTagToggle={handleTagToggle}
                 activeTags={activeTags}
-                onCreateMemo={createMemo}
+                onCreateMemo={handleOpenMemoCreate}
                 allTags={allTags}
             />
         </div>
@@ -567,6 +651,13 @@ export default function App() {
       <div className="absolute top-2 right-2 z-10 flex items-center space-x-1">
         {selectedMemo && (
           <>
+            {/* ユーザープレゼンスインジケーター（一時的に無効化） */}
+            {/* <UserPresenceIndicator 
+              presences={userPresences} 
+              users={connectedUsers}
+              className="mr-4"
+            /> */}
+
             <PrivacyToggleButton isPrivate={selectedMemo.isPrivate} onClick={handleTogglePrivacy} />
 
             <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={handleDeleteMemo} title="メモを削除">
@@ -596,7 +687,7 @@ export default function App() {
             </SheetDescription>
           </SheetHeader>
           {/* デスクトップでは常にサイドバーコンテンツを表示 */}
-          <SidebarContent onOpenSettings={handleOpenSettings} />
+          <SidebarContent onOpenSettings={handleOpenSettings} onOpenProfile={handleOpenProfile} />
         </SheetContent>
       </Sheet>
 
@@ -626,6 +717,59 @@ export default function App() {
             </div>
         </DialogContent>
       </Dialog>
+
+      <UserProfileDialog open={isProfileDialogOpen} onOpenChange={setProfileDialogOpen} />
+
+      {/* メモ作成ダイアログは削除（直接メモ作成に変更） */}
+
+      <MemoEditDialog 
+        open={isMemoEditDialogOpen} 
+        onOpenChange={setMemoEditDialogOpen}
+        memo={editingMemo}
+        onUpdateMemo={async (id, memoData) => {
+          await updateMemo(id, memoData);
+          setEditingMemo(null);
+        }}
+      />
+
+      <MemoDeleteDialog 
+        open={isMemoDeleteDialogOpen} 
+        onOpenChange={setMemoDeleteDialogOpen}
+        memo={deletingMemo}
+        onDeleteMemo={async (id) => {
+          await deleteMemo(id);
+          setDeletingMemo(null);
+        }}
+      />
+
+      {/* グループダイアログ */}
+      <GroupSettingsDialog 
+        open={isGroupSettingsDialogOpen} 
+        onOpenChange={setGroupSettingsDialogOpen}
+        group={null} // TODO: 現在のグループを渡す
+        members={[]} // TODO: グループメンバーを渡す
+        currentUserId="current-user-id" // TODO: 現在のユーザーIDを渡す
+        onUpdateGroup={async (id, data) => {
+          // TODO: グループ更新API呼び出し
+          console.log('Update group:', id, data);
+        }}
+        onInviteMember={async (groupId, email, role) => {
+          // TODO: メンバー招待API呼び出し
+          console.log('Invite member:', groupId, email, role);
+        }}
+        onRemoveMember={async (groupId, memberId) => {
+          // TODO: メンバー削除API呼び出し
+          console.log('Remove member:', groupId, memberId);
+        }}
+        onUpdateMemberRole={async (groupId, memberId, role) => {
+          // TODO: メンバーロール更新API呼び出し
+          console.log('Update member role:', groupId, memberId, role);
+        }}
+        onDeleteGroup={async (id) => {
+          // TODO: グループ削除API呼び出し
+          console.log('Delete group:', id);
+        }}
+      />
     </div>
   );
 } 

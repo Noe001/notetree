@@ -1,5 +1,8 @@
 // API Base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+// ローカルストレージフォールバック機能をインポート
+import { LocalMemoStorage, LocalMemo } from './local-memo-storage';
 
 // APIレスポンスの型定義
 export interface ApiResponse<T> {
@@ -27,8 +30,8 @@ export interface Memo {
 export interface CreateMemoDto {
   title: string;
   content: string;
-  tags: string[];
-  isPrivate: boolean;
+  tags?: string[];
+  isPrivate?: boolean;
   groupId?: string | null;
 }
 
@@ -39,6 +42,50 @@ export interface UpdateMemoDto {
   tags?: string[];
   isPrivate?: boolean;
   groupId?: string | null;
+}
+
+// ユーザーの型定義
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// グループ関連の型定義（一時的な実装）
+export interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  ownerId: string;
+  members: GroupMember[];
+}
+
+export interface GroupMember {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export interface Invitation {
+  id: string;
+  groupId: string;
+  inviterId: string;
+  inviteeEmail: string;
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+  expiresAt: string;
 }
 
 class ApiClient {
@@ -86,12 +133,12 @@ class ApiClient {
     const query = params.toString();
     const endpoint = `/memos${query ? `?${query}` : ''}`;
     
-    return this.request<ApiResponse<Memo[]>>(endpoint);
+    return await this.request<ApiResponse<Memo[]>>(endpoint);
   }
 
   // メモを作成
   async createMemo(memo: CreateMemoDto): Promise<ApiResponse<Memo>> {
-    return this.request<ApiResponse<Memo>>('/memos', {
+    return await this.request<ApiResponse<Memo>>('/memos', {
       method: 'POST',
       body: JSON.stringify(memo),
     });
@@ -103,16 +150,16 @@ class ApiClient {
   }
 
   // メモを更新
-  async updateMemo(id: string, memo: UpdateMemoDto): Promise<ApiResponse<Memo>> {
-    return this.request<ApiResponse<Memo>>(`/memos/${id}`, {
+  async updateMemo(id: string, updates: Partial<CreateMemoDto>): Promise<ApiResponse<Memo>> {
+    return await this.request<ApiResponse<Memo>>(`/memos/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(memo),
+      body: JSON.stringify(updates),
     });
   }
 
   // メモを削除
   async deleteMemo(id: string): Promise<ApiResponse<void>> {
-    return this.request<ApiResponse<void>>(`/memos/${id}`, {
+    return await this.request<ApiResponse<void>>(`/memos/${id}`, {
       method: 'DELETE',
     });
   }
@@ -125,6 +172,111 @@ class ApiClient {
     if (groupId) params.append('groupId', groupId);
     
     return this.request<ApiResponse<Memo[]>>(`/memos/search?${params.toString()}`);
+  }
+
+  // グループ関連のメソッド（一時的な実装）
+  async getGroups(): Promise<ApiResponse<Group[]>> {
+    // 一時的にモックデータを返す
+    return {
+      success: true,
+      data: [],
+      count: 0
+    };
+  }
+
+  async createGroup(groupData: { name: string; description?: string }): Promise<ApiResponse<Group>> {
+    // 一時的にモックデータを返す
+    const mockGroup: Group = {
+      id: `group_${Date.now()}`,
+      name: groupData.name,
+      description: groupData.description,
+      isPublic: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ownerId: 'current_user',
+      members: []
+    };
+    
+    return {
+      success: true,
+      data: mockGroup
+    };
+  }
+
+  async updateGroup(id: string, updates: Partial<Group>): Promise<ApiResponse<Group>> {
+    // 一時的にモックデータを返す
+    return {
+      success: true,
+      data: {
+        id,
+        name: 'Updated Group',
+        isPublic: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ownerId: 'current_user',
+        members: [],
+        ...updates
+      }
+    };
+  }
+
+  async deleteGroup(id: string): Promise<ApiResponse<void>> {
+    // 一時的にモックデータを返す
+    return {
+      success: true
+    };
+  }
+
+  async getInvitations(): Promise<ApiResponse<Invitation[]>> {
+    // 一時的にモックデータを返す
+    return {
+      success: true,
+      data: [],
+      count: 0
+    };
+  }
+
+  async getGroupInvitations(groupId: string): Promise<ApiResponse<Invitation[]>> {
+    // 一時的にモックデータを返す
+    return {
+      success: true,
+      data: [],
+      count: 0
+    };
+  }
+
+  async searchUsers(query: string): Promise<ApiResponse<User[]>> {
+    // 一時的にモックデータを返す
+    return {
+      success: true,
+      data: [],
+      count: 0
+    };
+  }
+
+  async inviteMember(groupId: string, invitation: { email?: string; userId?: string; role?: 'admin' | 'member' }): Promise<ApiResponse<Invitation>> {
+    // 一時的にモックデータを返す
+    const mockInvitation: Invitation = {
+      id: `invitation_${Date.now()}`,
+      groupId,
+      inviterId: 'current_user',
+      inviteeEmail: invitation.email || 'test@example.com',
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+    };
+    
+    return {
+      success: true,
+      data: mockInvitation
+    };
+  }
+
+  async acceptInvitation(token: string): Promise<ApiResponse<void>> {
+    // 一時的にモックデータを返す
+    return {
+      success: true
+    };
   }
 }
 

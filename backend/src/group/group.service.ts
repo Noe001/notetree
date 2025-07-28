@@ -126,7 +126,7 @@ export class GroupService {
         throw new NotFoundException(`Group with ID ${id} not found`);
       }
 
-      await this.groupRepository.delete(id);      
+      await this.groupRepository.delete(id);
       this.logger.log(`Group ${id} deleted successfully`);
     } catch (error) {
       this.logger.error(`Failed to delete group ${id}: ${error.message}`, error.stack);
@@ -159,7 +159,7 @@ export class GroupService {
         role
       });
 
-      const savedMember = await this.groupMemberRepository.save(member);      
+      const savedMember = await this.groupMemberRepository.save(member);
       this.logger.log(`Member ${userId} added to group ${groupId} successfully`);
       
       return savedMember;
@@ -190,7 +190,7 @@ export class GroupService {
       await this.groupMemberRepository.delete({
         group: { id: groupId },
         user: { id: userId }
-      });      
+      });
       this.logger.log(`Member ${userId} removed from group ${groupId} successfully`);
     } catch (error) {
       this.logger.error(`Failed to remove member ${userId} from group ${groupId}: ${error.message}`, error.stack);

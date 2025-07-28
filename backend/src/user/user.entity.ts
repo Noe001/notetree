@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { GroupMember } from '../group/group-member.entity';
+// import { GroupMember } from '../group/group-member.entity';
 import { Memo } from '../memo/memo.entity';
 
 @Entity()
@@ -11,13 +11,16 @@ export class User {
   name: string;
 
   @Column({ unique: true })
+  username: string;
+
+  @Column({ unique: true })
   email: string;
 
   @Column({ nullable: true })
   profileImageUrl: string;
 
-  @OneToMany(() => GroupMember, (groupMember) => groupMember.user)
-  groupMemberships: GroupMember[];
+  // @OneToMany(() => GroupMember, (groupMember) => groupMember.user)
+  // groupMemberships: GroupMember[];
 
   @OneToMany(() => Memo, (memo) => memo.user)
   memos: Memo[];

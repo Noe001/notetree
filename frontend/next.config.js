@@ -1,26 +1,97 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config) => {
-    config.watchOptions = {
-      poll: 1000,
-      aggregateTimeout: 300,
-    };
-    return config;
+  
+  // セキュリティヘッダーの設定
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          // Content Security Policy
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: https:",
+              "connect-src 'self' https://*.supabase.com https://*.supabase.co wss://*.supabase.com wss://*.supabase.co http://localhost:8000 http://localhost:3000 http://localhost:3001 http://localhost:8080 ws://localhost:8000 ws://localhost:8080",
+              "frame-src https://accounts.google.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+              "upgrade-insecure-requests"
+            ].join('; ')
   },
-  // Fast Refreshの最適化
+          // セキュリティヘッダー
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'geolocation=(), microphone=(), camera=(), fullscreen=self'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload'
+          }
+        ]
+      }
+    ]
+  },
+  
+  // 環境変数の設定
+  env: {
+    NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version || '1.0.0',
+  },
+  
+  // 画像の最適化設定
+  images: {
+    domains: ['localhost'],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
+  },
+  
+  // Webpackの設定
+  webpack: (config, { dev, isServer }) => {
+    // 本番環境でのソースマップを無効化（セキュリティ向上）
+    if (!dev && !isServer) {
+      config.devtool = false
+    }
+    
+    return config
+  },
+  
+  // PoweredByヘッダーを削除（セキュリティ向上）
+  poweredByHeader: false,
+  
+  // 圧縮の有効化
+  compress: true,
+  
+  // ETagの有効化
+  generateEtags: true,
+  
+  // 実験的機能
   experimental: {
-    optimizePackageImports: ['react', 'react-dom'],
-  },
-  // Turbopack設定（安定版）
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
-  },
-};
+    // セキュリティ関連の実験的機能
+    strictNextHead: true,
+  }
+}
 
-module.exports = nextConfig; 
+module.exports = nextConfig 

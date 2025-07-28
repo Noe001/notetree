@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, ILike } from 'typeorm';
 import { Memo } from './memo.entity';
 import { User } from '../user/user.entity';
-import { Group } from '../group/group.entity';
+// import { Group } from '../group/group.entity';
 import { CreateMemoDto } from './dto/create-memo.dto';
 import { UpdateMemoDto } from './dto/update-memo.dto';
 
@@ -16,8 +16,8 @@ export class MemoService {
     private readonly memoRepository: Repository<Memo>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(Group)
-    private readonly groupRepository: Repository<Group>,
+    // @InjectRepository(Group)
+    // private readonly groupRepository: Repository<Group>,
   ) {}
 
   async create(createMemoDto: CreateMemoDto, userId: string): Promise<Memo> {
@@ -29,34 +29,34 @@ export class MemoService {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
-      let group: Group | null = null;
-      if (createMemoDto.groupId) {
-        const foundGroup = await this.groupRepository.findOne({ 
-          where: { id: createMemoDto.groupId },
-          relations: ['members', 'members.user']
-        });
-        if (!foundGroup) {
-          throw new NotFoundException(`Group with ID ${createMemoDto.groupId} not found`);
-        }
-        // グループメンバーかチェック
-        const isMember = foundGroup.members?.some(member => member.user && member.user.id === userId);
-        if (!isMember) {
-          throw new ForbiddenException('You are not a member of this group');
-        }
-        group = foundGroup;
-      }
+      // let group: Group | null = null;
+      // if (createMemoDto.groupId) {
+      //   const foundGroup = await this.groupRepository.findOne({ 
+      //     where: { id: createMemoDto.groupId },
+      //     relations: ['members', 'members.user']
+      //   });
+      //   if (!foundGroup) {
+      //     throw new NotFoundException(`Group with ID ${createMemoDto.groupId} not found`);
+      //   }
+      //   // グループメンバーかチェック
+      //   const isMember = foundGroup.members?.some(member => member.user && member.user.id === userId);
+      //   if (!isMember) {
+      //     throw new ForbiddenException('You are not a member of this group');
+      //   }
+      //   group = foundGroup;
+      // }
 
       const memo = this.memoRepository.create({
         title: createMemoDto.title,
         content: createMemoDto.content,
         tags: createMemoDto.tags,
         isPrivate: createMemoDto.isPrivate || false,
-        groupId: createMemoDto.groupId || null,
+        groupId: null, // createMemoDto.groupId || null,
       });
       memo.user = user;
-      if (group) {
-        memo.group = group;
-      }
+      // if (group) {
+      //   memo.group = group;
+      // }
 
       const savedMemo = await this.memoRepository.save(memo) as Memo;
       this.logger.log(`Memo created successfully with ID: ${savedMemo.id}`);
@@ -72,16 +72,16 @@ export class MemoService {
       this.logger.log(`Fetching memos for user: ${userId}, group: ${groupId}`);
       
       const queryBuilder = this.memoRepository.createQueryBuilder('memo')
-        .leftJoinAndSelect('memo.user', 'user')
-        .leftJoinAndSelect('memo.group', 'group');
+        .leftJoinAndSelect('memo.user', 'user');
+        // .leftJoinAndSelect('memo.group', 'group');
 
       if (userId) {
         queryBuilder.andWhere('memo.user.id = :userId', { userId });
       }
 
-      if (groupId) {
-        queryBuilder.andWhere('memo.group.id = :groupId', { groupId });
-      }
+      // if (groupId) {
+      //   queryBuilder.andWhere('memo.group.id = :groupId', { groupId });
+      // }
 
       queryBuilder.orderBy('memo.updatedAt', 'DESC');
 
@@ -100,16 +100,16 @@ export class MemoService {
       
       const queryBuilder = this.memoRepository.createQueryBuilder('memo')
         .leftJoinAndSelect('memo.user', 'user')
-        .leftJoinAndSelect('memo.group', 'group')
+        // .leftJoinAndSelect('memo.group', 'group')
         .where('memo.title ILIKE :query OR memo.content ILIKE :query', { query: `%${query}%` });
 
       if (userId) {
         queryBuilder.andWhere('memo.user.id = :userId', { userId });
       }
 
-      if (groupId) {
-        queryBuilder.andWhere('memo.group.id = :groupId', { groupId });
-      }
+      // if (groupId) {
+      //   queryBuilder.andWhere('memo.group.id = :groupId', { groupId });
+      // }
 
       queryBuilder.orderBy('memo.updatedAt', 'DESC');
 
@@ -137,8 +137,8 @@ export class MemoService {
 
       // アクセス権限チェック
       if (userId) {
-        const hasAccess = memo.user.id === userId || 
-          (memo.group && memo.group.members.some(member => member.user.id === userId));
+        const hasAccess = memo.user.id === userId;
+          // (memo.group && memo.group.members.some(member => member.user.id === userId));
         
         if (!hasAccess && memo.isPrivate) {
           throw new ForbiddenException('You do not have access to this memo');
@@ -159,8 +159,8 @@ export class MemoService {
       const memo = await this.findOne(id, userId);
       
       // 編集権限チェック
-      const canEdit = memo.user.id === userId || 
-        (memo.group && memo.group.members.some(member => member.user.id === userId));
+      const canEdit = memo.user.id === userId;
+        // (memo.group && memo.group.members.some(member => member.user.id === userId));
       
       if (!canEdit) {
         throw new ForbiddenException('You do not have permission to edit this memo');

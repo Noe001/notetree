@@ -18,7 +18,7 @@ export class CreateMemoDto {
   @IsOptional()
   isPrivate?: boolean;
 
-  @IsString()
-  @IsOptional()
-  groupId?: string;
+  // @IsString()
+  // @IsOptional()
+  // groupId?: string;
 } 

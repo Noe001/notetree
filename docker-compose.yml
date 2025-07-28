@@ -88,12 +88,21 @@ services:
     environment:
       - GOTRUE_API_HOST=0.0.0.0
       - GOTRUE_API_PORT=9999
+
       - GOTRUE_DB_DRIVER=postgres
-      - GOTRUE_DB_DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+      - GOTRUE_DB_DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres?search_path=auth
+      - GOTRUE_DB_SCHEMA=auth
       - GOTRUE_JWT_SECRET=thisisareallylongandsecuresecret
       - GOTRUE_SITE_URL=http://localhost:5173
-      - GOTRUE_DB_AUTOMIGRATE=false
+      - GOTRUE_DB_AUTOMIGRATE=true
       - GOTRUE_DB_MIGRATIONS_PATH=""
+      - GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
+      - GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=your-google-client-id
+      - GOTRUE_EXTERNAL_GOOGLE_SECRET=your-google-secret
+      - GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=http://localhost:8000/auth/v1/callback
+      - GOTRUE_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3001
+      - GOTRUE_CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-Client-Info,apikey
+      - GOTRUE_CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
     depends_on:
       db:
         condition: service_healthy
@@ -107,6 +116,9 @@ services:
       - PGRST_DB_SCHEMA=public,auth,storage
       - PGRST_DB_ANON_ROLE=anon
       - PGRST_JWT_SECRET=thisisareallylongandsecuresecret
+      - PGRST_SERVER_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3001
+      - PGRST_SERVER_CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-Client-Info,apikey
+      - PGRST_SERVER_CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
     depends_on:
       db:
         condition: service_healthy

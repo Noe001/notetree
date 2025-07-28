@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { GroupMember } from './group-member.entity';
 import { Memo } from '../memo/memo.entity';
+import { Invitation } from './invitation.entity';
 
 @Entity()
 export class Group {
@@ -21,6 +22,9 @@ export class Group {
 
   @OneToMany(() => Memo, (memo) => memo.group)
   memos: Memo[];
+
+  @OneToMany(() => Invitation, (invitation) => invitation.group)
+  invitations: Invitation[];
 
   @CreateDateColumn()
   createdAt: Date;
