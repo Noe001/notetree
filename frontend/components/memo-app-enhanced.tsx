@@ -24,6 +24,11 @@ import { UserProfileDialog } from "@/components/auth/user-profile-dialog";
 import { MemoEditDialog } from "@/components/memo/memo-edit-dialog";
 import { MemoDeleteDialog } from "@/components/memo/memo-delete-dialog";
 import { GroupSettingsDialog } from "@/components/group/group-settings-dialog";
+import { MemberManagementDialog } from "@/components/group/member-management-dialog";
+import { SearchResultsDialog } from "@/components/search/search-results-dialog";
+import { ExportImportDialog } from "@/components/data/export-import-dialog";
+import { KeyboardShortcutsDialog } from "@/components/help/keyboard-shortcuts-dialog";
+import { CreateGroupDialog } from "@/components/group/create-group-dialog";
 
 // リアルタイム関連のインポート（一時的に無効化）
 // import { useMemoRealtime } from "@/hooks/useRealtime";
@@ -46,12 +51,28 @@ type Memo = {
 };
 
 // 現在のユーザーID（実際のアプリでは認証から取得）
-const CURRENT_USER_ID = 'dc9282c0-707f-4030-888d-cb1d414108f7';
+const CURRENT_USER_ID = 'e87a6ec4-16b8-44c7-b339-604f62d9557c';
 
 // =================================================================
 // コンポーネント 1: サイドバー（Sheetの中身）
 // =================================================================
-const SidebarContent = ({ onOpenSettings, onOpenProfile }: { onOpenSettings: () => void; onOpenProfile: () => void }) => {
+const SidebarContent = ({ 
+  onOpenSettings, 
+  onOpenProfile,
+  onOpenMemberManagement,
+  onOpenSearchResults,
+  onOpenExportImport,
+  onOpenKeyboardShortcuts,
+  onOpenCreateGroup
+}: { 
+  onOpenSettings: () => void; 
+  onOpenProfile: () => void;
+  onOpenMemberManagement: () => void;
+  onOpenSearchResults: () => void;
+  onOpenExportImport: () => void;
+  onOpenKeyboardShortcuts: () => void;
+  onOpenCreateGroup: () => void;
+}) => {
   const { user } = useAuth();
   
   return (
@@ -81,7 +102,7 @@ const SidebarContent = ({ onOpenSettings, onOpenProfile }: { onOpenSettings: () 
                 <span className="ml-4">個人メモ</span>
                 <Check className="w-4 h-4 ml-auto" />
             </Button>
-            <Button variant="ghost" className="w-full text-muted-foreground justify-start">
+            <Button variant="ghost" className="w-full text-muted-foreground justify-start" onClick={onOpenCreateGroup}>
                 <Plus className="h-5 w-5" />
                 <span className="ml-4">新しいグループ</span>
             </Button>
@@ -378,6 +399,11 @@ export default function App() {
 
   // グループダイアログの状態
   const [isGroupSettingsDialogOpen, setGroupSettingsDialogOpen] = useState(false);
+  const [isMemberManagementDialogOpen, setMemberManagementDialogOpen] = useState(false);
+  const [isCreateGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
+  const [isSearchResultsDialogOpen, setSearchResultsDialogOpen] = useState(false);
+  const [isExportImportDialogOpen, setExportImportDialogOpen] = useState(false);
+  const [isKeyboardShortcutsDialogOpen, setKeyboardShortcutsDialogOpen] = useState(false);
 
   // リアルタイム機能の状態
   const [currentGroupId, setCurrentGroupId] = useState<string | null>(null);
@@ -572,6 +598,28 @@ export default function App() {
     }, 150);
   };
 
+  const handleOpenCreateGroup = () => {
+    setSidebarOpen(false);
+    setTimeout(() => {
+        setCreateGroupDialogOpen(true);
+    }, 150);
+  };
+
+  const handleCreateGroup = async (groupData: { name: string; description?: string }) => {
+    try {
+      const response = await apiClient.createGroup(groupData);
+      if (response.success) {
+        console.log('Group created successfully:', response.data);
+        // TODO: グループリストを更新
+      } else {
+        throw new Error(response.error || 'グループの作成に失敗しました');
+      }
+    } catch (error) {
+      console.error('Failed to create group:', error);
+      throw error;
+    }
+  };
+
   // リアルタイム機能は一時的に無効化
 
   // リアルタイム購読（一時的に無効化）
@@ -687,7 +735,27 @@ export default function App() {
             </SheetDescription>
           </SheetHeader>
           {/* デスクトップでは常にサイドバーコンテンツを表示 */}
-          <SidebarContent onOpenSettings={handleOpenSettings} onOpenProfile={handleOpenProfile} />
+          <SidebarContent 
+            onOpenSettings={handleOpenSettings} 
+            onOpenProfile={handleOpenProfile}
+            onOpenMemberManagement={() => {
+              setSidebarOpen(false);
+              setTimeout(() => setMemberManagementDialogOpen(true), 150);
+            }}
+            onOpenSearchResults={() => {
+              setSidebarOpen(false);
+              setTimeout(() => setSearchResultsDialogOpen(true), 150);
+            }}
+            onOpenExportImport={() => {
+              setSidebarOpen(false);
+              setTimeout(() => setExportImportDialogOpen(true), 150);
+            }}
+            onOpenKeyboardShortcuts={() => {
+              setSidebarOpen(false);
+              setTimeout(() => setKeyboardShortcutsDialogOpen(true), 150);
+            }}
+            onOpenCreateGroup={handleOpenCreateGroup}
+          />
         </SheetContent>
       </Sheet>
 
@@ -719,6 +787,14 @@ export default function App() {
       </Dialog>
 
       <UserProfileDialog open={isProfileDialogOpen} onOpenChange={setProfileDialogOpen} />
+
+      {/* グループ作成ダイアログ */}
+      <CreateGroupDialog 
+        open={isCreateGroupDialogOpen} 
+        onOpenChange={setCreateGroupDialogOpen}
+        onCreateGroup={handleCreateGroup}
+        loading={false}
+      />
 
       {/* メモ作成ダイアログは削除（直接メモ作成に変更） */}
 
@@ -770,6 +846,50 @@ export default function App() {
           console.log('Delete group:', id);
         }}
       />
+
+      <MemberManagementDialog 
+        open={isMemberManagementDialogOpen} 
+        onOpenChange={setMemberManagementDialogOpen}
+        members={[]} // TODO: 実際のメンバー情報を渡す
+        onInviteMember={async (email, role) => {
+          // TODO: メンバー招待API呼び出し
+          console.log('Invite member:', email, role);
+        }}
+        onRemoveMember={async (memberId) => {
+          // TODO: メンバー削除API呼び出し
+          console.log('Remove member:', memberId);
+        }}
+        onUpdateMemberRole={async (memberId, role) => {
+          // TODO: メンバーロール更新API呼び出し
+          console.log('Update member role:', memberId, role);
+        }}
+      />
+
+      <SearchResultsDialog 
+        open={isSearchResultsDialogOpen} 
+        onOpenChange={setSearchResultsDialogOpen}
+        searchQuery={searchQuery}
+        searchResults={filteredAndSortedMemos}
+        onSelectMemo={setSelectedMemo}
+      />
+
+      <ExportImportDialog 
+        open={isExportImportDialogOpen} 
+        onOpenChange={setExportImportDialogOpen}
+        onExport={async (format) => {
+          // TODO: エクスポート機能実装
+          console.log('Export in format:', format);
+        }}
+        onImport={async (file, format) => {
+          // TODO: インポート機能実装
+          console.log('Import file in format:', format);
+        }}
+      />
+
+      <KeyboardShortcutsDialog 
+        open={isKeyboardShortcutsDialogOpen} 
+        onOpenChange={setKeyboardShortcutsDialogOpen}
+      />
     </div>
   );
-} 
+}

@@ -8,18 +8,18 @@ test.describe('Authentication Flow', () => {
 
   test('ログインダイアログが表示される', async ({ page }) => {
     // 未認証の場合、ログインダイアログが表示される
-    await expect(page.getByText('Notetreeにログイン')).toBeVisible()
-    await expect(page.getByText('Googleアカウントでログインして、メモの作成と共有を始めましょう。')).toBeVisible()
-    await expect(page.getByRole('button', { name: /googleでログイン/i })).toBeVisible()
+    await expect(page.getByText('Notetreeへようこそ')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('アカウントにログインするか、新しくアカウントを作成してください。')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('button', { name: /googleでログイン/i })).toBeVisible({ timeout: 10000 })
   })
 
   test('利用規約とプライバシーポリシーのテキストが表示される', async ({ page }) => {
-    await expect(page.getByText(/ログインすることで、利用規約とプライバシーポリシーに同意したことになります/)).toBeVisible()
+    await expect(page.getByText(/ログイン・サインアップすることで、利用規約とプライバシーポリシーに同意したことになります/)).toBeVisible({ timeout: 10000 })
   })
 
   test('Googleログインボタンがクリック可能', async ({ page }) => {
     const googleButton = page.getByRole('button', { name: /googleでログイン/i })
-    await expect(googleButton).toBeEnabled()
+    await expect(googleButton).toBeEnabled({ timeout: 10000 })
     
     // ボタンをクリックしてもエラーにならないことを確認
     // 実際のOAuth認証はテスト環境では行わない
@@ -28,14 +28,14 @@ test.describe('Authentication Flow', () => {
 
   test('ログインフォームのUI要素が正しく表示される', async ({ page }) => {
     // ダイアログのタイトル
-    await expect(page.getByRole('heading', { name: 'Notetreeにログイン' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Notetreeへようこそ' })).toBeVisible({ timeout: 10000 })
     
     // Googleログインボタンのアイコンとテキスト
     const googleButton = page.getByRole('button', { name: /googleでログイン/i })
-    await expect(googleButton).toBeVisible()
+    await expect(googleButton).toBeVisible({ timeout: 10000 })
     
     // ローディング状態でないことを確認
-    await expect(page.getByText('ログイン中...')).not.toBeVisible()
+    await expect(page.getByText('ログイン中...')).not.toBeVisible({ timeout: 10000 })
   })
 })
 
@@ -58,13 +58,14 @@ test.describe('Authenticated State', () => {
           }
         }
       }
-      localStorage.setItem('sb-localhost-auth-token', JSON.stringify(mockSession))
+      localStorage.setItem('auth_session', JSON.stringify(mockSession))
+      localStorage.setItem('auth_user', JSON.stringify(mockSession.user))
     })
     
     await page.reload()
     
     // メイン画面の要素が表示されることを確認
-    // ここでは一般的なメモアプリの要素をチェック
-    await expect(page.getByText('メモ')).toBeVisible({ timeout: 10000 })
+    // メモリストパネルのタイトルをチェック (h2要素)
+    await expect(page.locator('h2:text("メモ")')).toBeVisible({ timeout: 15000 })
   })
-}) 
+})

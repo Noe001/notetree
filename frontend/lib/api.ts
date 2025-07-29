@@ -174,33 +174,16 @@ class ApiClient {
     return this.request<ApiResponse<Memo[]>>(`/memos/search?${params.toString()}`);
   }
 
-  // グループ関連のメソッド（一時的な実装）
+  // グループ関連のメソッド
   async getGroups(): Promise<ApiResponse<Group[]>> {
-    // 一時的にモックデータを返す
-    return {
-      success: true,
-      data: [],
-      count: 0
-    };
+    return this.request<ApiResponse<Group[]>>('/groups');
   }
 
   async createGroup(groupData: { name: string; description?: string }): Promise<ApiResponse<Group>> {
-    // 一時的にモックデータを返す
-    const mockGroup: Group = {
-      id: `group_${Date.now()}`,
-      name: groupData.name,
-      description: groupData.description,
-      isPublic: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerId: 'current_user',
-      members: []
-    };
-    
-    return {
-      success: true,
-      data: mockGroup
-    };
+    return this.request<ApiResponse<Group>>('/groups', {
+      method: 'POST',
+      body: JSON.stringify(groupData)
+    });
   }
 
   async updateGroup(id: string, updates: Partial<Group>): Promise<ApiResponse<Group>> {
