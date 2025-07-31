@@ -48,14 +48,14 @@ const DialogTrigger = React.forwardRef<
   HTMLButtonElement,
   DialogTriggerProps
 >(({ className, asChild = false, children, ...props }, ref) => {
-  if (asChild) {
-    return <>{children}</>
-  }
-  return (
+    if (asChild) {
+      return <>{children}</>
+    }
+    return (
     <button ref={ref} className={cn(className)} {...props}>
-      {children}
-    </button>
-  )
+        {children}
+      </button>
+    )
 })
 DialogTrigger.displayName = "DialogTrigger"
 

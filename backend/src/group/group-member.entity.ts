@@ -1,33 +1,29 @@
 import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Group } from './group.entity';
 import { User } from '../user/user.entity';
-
-export enum GroupMemberRole {
-  ADMIN = 'admin',
-  MEMBER = 'member',
-}
+import { GroupMemberRole } from './types';
 
 @Entity()
 export class GroupMember {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @ManyToOne(() => Group, (group) => group.members)
-  group: Group;
+  group!: Group;
 
   @ManyToOne(() => User)
-  user: User;
+  user!: User;
 
   @Column({
     type: 'enum',
     enum: GroupMemberRole,
     default: GroupMemberRole.MEMBER,
   })
-  role: GroupMemberRole;
+  role!: GroupMemberRole;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

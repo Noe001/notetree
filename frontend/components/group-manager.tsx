@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Settings, UserPlus, Mail, Crown, Shield, Trash2, Edit, X } from 'lucide-react';
+import { Users, Plus, Settings, UserPlus, Mail, Crown, Shield, Trash2, Edit, X, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useGroups, useInvitations, useUserSearch } from '@/hooks/useApi';
 import { Group, GroupMember, Invitation } from '@/lib/api';
+import { JoinGroupDialog } from './group/join-group-dialog';
+import { CreateGroupDialog } from './group/create-group-dialog';
 
 interface GroupManagerProps {
   currentUserId: string;
@@ -143,54 +145,37 @@ export function GroupManager({ currentUserId, selectedGroupId, onGroupSelect }: 
           <h2 className="text-xl font-semibold">グループ管理</h2>
         </div>
         
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>新規グループ</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>新しいグループを作成</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="groupName">グループ名</Label>
-                <Input
-                  id="groupName"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="グループ名を入力"
-                />
-              </div>
-              <div>
-                <Label htmlFor="groupDescription">説明（任意）</Label>
-                <Textarea
-                  id="groupDescription"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="グループの説明を入力"
-                  rows={3}
-                />
-              </div>
-            </div>
-            {actionError && (
-              <Alert>
-                <AlertDescription>{actionError}</AlertDescription>
-              </Alert>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                キャンセル
+        <div className="flex items-center space-x-2">
+          <JoinGroupDialog 
+            trigger={
+              <Button variant="outline" className="flex items-center space-x-2">
+                <LogIn className="h-4 w-4" />
+                <span>グループに参加</span>
               </Button>
-              <Button onClick={handleCreateGroup} disabled={actionLoading || !formData.name.trim()}>
-                {actionLoading ? '作成中...' : '作成'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            }
+            onSuccess={fetchGroups}
+          />
+          
+          <CreateGroupDialog
+            open={showCreateDialog}
+            onOpenChange={setShowCreateDialog}
+            onCreateGroup={async (groupData) => {
+              try {
+                setActionLoading(true);
+                setActionError(null);
+                await createGroup(groupData);
+                setFormData({ name: '', description: '' });
+                setShowCreateDialog(false);
+              } catch (error) {
+                setActionError(error instanceof Error ? error.message : 'グループの作成に失敗しました');
+              } finally {
+                setActionLoading(false);
+              }
+            }}
+            loading={actionLoading}
+          />
       </div>
+    </div>
 
       {error && (
         <Alert>
@@ -379,4 +364,4 @@ export function GroupManager({ currentUserId, selectedGroupId, onGroupSelect }: 
       </Dialog>
     </div>
   );
-} 
+}

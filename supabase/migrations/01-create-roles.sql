@@ -1,28 +1,18 @@
--- Create necessary roles for Supabase
-CREATE ROLE anon NOLOGIN NOINHERIT;
-CREATE ROLE authenticated NOLOGIN NOINHERIT;
-CREATE ROLE service_role NOLOGIN NOINHERIT;
+-- Create roles for NoteTree application
 
--- Grant permissions to anon role
-GRANT USAGE ON SCHEMA public TO anon;
-GRANT USAGE ON SCHEMA auth TO anon;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon;
-GRANT SELECT ON ALL TABLES IN SCHEMA auth TO anon;
+-- Create auth schema if not exists
+CREATE SCHEMA IF NOT EXISTS auth;
 
--- Grant permissions to authenticated role
-GRANT USAGE ON SCHEMA public TO authenticated;
-GRANT USAGE ON SCHEMA auth TO authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA auth TO authenticated;
+-- Create application roles
+CREATE ROLE anon NOLOGIN;
+CREATE ROLE authenticated NOLOGIN;
+CREATE ROLE service_role NOLOGIN;
 
--- Grant permissions to service_role
-GRANT USAGE ON SCHEMA public TO service_role;
-GRANT USAGE ON SCHEMA auth TO service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA auth TO service_role;
+-- Grant basic permissions
+GRANT USAGE ON SCHEMA public, auth TO anon, authenticated, service_role;
 
--- Set default privileges for future tables
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA auth GRANT ALL ON TABLES TO authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA auth GRANT ALL ON TABLES TO service_role; 
+-- Grant table permissions
+GRANT ALL ON ALL TABLES IN SCHEMA public, auth TO authenticated;
+GRANT SELECT ON ALL TABLES IN SCHEMA public, auth TO anon;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public, auth TO authenticated;
+GRANT SELECT ON ALL SEQUENCES IN SCHEMA public, auth TO anon;

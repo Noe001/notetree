@@ -5,7 +5,7 @@ import { AppService } from './app.service';
 import { GroupModule } from './group/group.module';
 import { MemoModule } from './memo/memo.module';
 import { UserModule } from './user/user.module';
-import { Invitation } from './group/invitation.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +15,7 @@ import { Invitation } from './group/invitation.entity';
       autoLoadEntities: true,
       synchronize: true, // 開発環境のみ
     }),
+    AuthModule,
     GroupModule,
     MemoModule,
     UserModule,

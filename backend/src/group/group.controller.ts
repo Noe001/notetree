@@ -15,11 +15,14 @@ import {
   UseGuards
 } from '@nestjs/common';
 
-import { GroupMemberRole } from './group-member.entity';
+import { GroupMemberRole } from './types';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { GroupAccessGuard } from './group-access.guard';
+import { GroupOwnerGuard } from './group-owner.guard';
 
 @Controller('groups')
 export class GroupController {
@@ -28,18 +31,22 @@ export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async create(@Body() createGroupDto: CreateGroupDto, @Req() req: any) {
     try {
       this.logger.log('POST /groups called');
-      const ownerId = req.user?.id || 'test-user-id'; // 暫定的なユーザーID
+      const ownerId = req.user?.id;
+      if (!ownerId) {
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      }
       const group = await this.groupService.create(createGroupDto, ownerId);
       return {
         success: true,
         data: group,
         message: 'Group created successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error creating group: ${error.message}`);
       throw new HttpException(
         {
@@ -53,16 +60,21 @@ export class GroupController {
   }
 
   @Get()
-  async findAll() {
+  @UseGuards(JwtAuthGuard)
+  async findAll(@Req() req: any) {
     try {
       this.logger.log('GET /groups called');
-      const groups = await this.groupService.findAll();
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      }
+      const groups = await this.groupService.findUserGroups(userId);
       return {
         success: true,
         data: groups,
         count: groups.length
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error fetching groups: ${error.message}`);
       throw new HttpException(
         {
@@ -76,6 +88,7 @@ export class GroupController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, GroupAccessGuard)
   async findOne(@Param('id') id: string) {
     try {
       this.logger.log(`GET /groups/${id} called`);
@@ -84,7 +97,7 @@ export class GroupController {
         success: true,
         data: group
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error fetching group ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -98,6 +111,7 @@ export class GroupController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, GroupOwnerGuard)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {
     try {
@@ -108,7 +122,7 @@ export class GroupController {
         data: group,
         message: 'Group updated successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error updating group ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -122,6 +136,7 @@ export class GroupController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, GroupOwnerGuard)
   async remove(@Param('id') id: string) {
     try {
       this.logger.log(`DELETE /groups/${id} called`);
@@ -130,7 +145,7 @@ export class GroupController {
         success: true,
         message: 'Group deleted successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error deleting group ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -144,6 +159,7 @@ export class GroupController {
   }
 
   @Get(':id/members')
+  @UseGuards(JwtAuthGuard, GroupAccessGuard)
   async getMembers(
     @Param('id') groupId: string,
     @Req() req: any
@@ -156,7 +172,7 @@ export class GroupController {
         data: members,
         count: members.length
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error fetching members for group ${groupId}: ${error.message}`);
       throw new HttpException(
         {
@@ -170,6 +186,7 @@ export class GroupController {
   }
 
   @Post(':id/members')
+  @UseGuards(JwtAuthGuard, GroupOwnerGuard)
   async addMember(
     @Param('id') groupId: string,
     @Body('userId') userId: string,
@@ -183,7 +200,7 @@ export class GroupController {
         data: member,
         message: 'Member added successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error adding member to group ${groupId}: ${error.message}`);
       throw new HttpException(
         {
@@ -197,6 +214,7 @@ export class GroupController {
   }
 
   @Delete(':id/members/:userId')
+  @UseGuards(JwtAuthGuard, GroupOwnerGuard)
   async removeMember(
     @Param('id') groupId: string,
     @Param('userId') userId: string
@@ -208,7 +226,7 @@ export class GroupController {
         success: true,
         message: 'Member removed successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error removing member from group ${groupId}: ${error.message}`);
       throw new HttpException(
         {
@@ -222,8 +240,9 @@ export class GroupController {
   }
 
   @Post(':id/invite')
+  @UseGuards(JwtAuthGuard, GroupOwnerGuard)
   @UsePipes(new ValidationPipe({ transform: true }))
-  async inviteMember(@Param('id') groupId: string, @Body() inviteMemberDto: InviteMemberDto, @Req() req) {
+  async inviteMember(@Param('id') groupId: string, @Body() inviteMemberDto: InviteMemberDto, @Req() req: any) {
     try {
       this.logger.log(`POST /groups/${groupId}/invite called`);
       const invitedById = req.user?.id || 'test-user-id'; // 暫定的なユーザーID
@@ -233,7 +252,7 @@ export class GroupController {
         data: result,
         message: 'Invitation sent successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error inviting member: ${error.message}`);
       throw new HttpException(
         {
@@ -246,7 +265,39 @@ export class GroupController {
     }
   }
 
+  @Post(':id/join')
+  @UseGuards(JwtAuthGuard)
+  async joinGroup(@Param('id') groupId: string, @Req() req: any, @Body() body?: { invitationToken?: string }) {
+    try {
+      this.logger.log(`POST /groups/${groupId}/join called`);
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      }
+      
+      const invitationToken = body?.invitationToken;
+      const member = await this.groupService.joinGroupWithInvitation(groupId, userId, invitationToken);
+      
+      return {
+        success: true,
+        data: member,
+        message: invitationToken ? 'Successfully joined group with invitation' : 'Successfully joined group'
+      };
+    } catch (error: any) {
+      this.logger.error(`Error joining group: ${error.message}`);
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Failed to join group',
+          error: error.name
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
   @Get(':id/invitations')
+  @UseGuards(JwtAuthGuard, GroupOwnerGuard)
   async getInvitations(@Param('id') groupId: string) {
     try {
       this.logger.log(`GET /groups/${groupId}/invitations called`);
@@ -256,7 +307,7 @@ export class GroupController {
         data: invitations,
         count: invitations.length
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error fetching invitations: ${error.message}`);
       throw new HttpException(
         {
@@ -265,6 +316,34 @@ export class GroupController {
           error: error.name
         },
         HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  @Post(':id/leave')
+  @UseGuards(JwtAuthGuard, GroupAccessGuard)
+  async leaveGroup(@Param('id') groupId: string, @Req() req: any) {
+    try {
+      this.logger.log(`POST /groups/${groupId}/leave called`);
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new HttpException('User ID is required', HttpStatus.BAD_REQUEST);
+      }
+      
+      await this.groupService.removeMember(groupId, userId);
+      return {
+        success: true,
+        message: 'Successfully left the group'
+      };
+    } catch (error: any) {
+      this.logger.error(`Error leaving group: ${error.message}`);
+      throw new HttpException(
+        {
+          success: false,
+          message: error.message || 'Failed to leave group',
+          error: error.name
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
   }

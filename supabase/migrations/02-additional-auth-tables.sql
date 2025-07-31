@@ -1,69 +1,118 @@
--- Additional tables required by Supabase Auth
+-- Additional authentication tables for NoteTree application
 
--- Instances table
+-- Create auth schema and tables
+CREATE SCHEMA IF NOT EXISTS auth;
+
+-- Create users table for authentication in auth schema (complete Supabase schema)
+CREATE TABLE IF NOT EXISTS auth.users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    aud VARCHAR(255),
+    role VARCHAR(255),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    encrypted_password VARCHAR(255),
+    email_confirmed_at TIMESTAMP WITH TIME ZONE,
+    invited_at TIMESTAMP WITH TIME ZONE,
+    confirmation_token VARCHAR(255),
+    confirmation_sent_at TIMESTAMP WITH TIME ZONE,
+    recovery_token VARCHAR(255),
+    recovery_sent_at TIMESTAMP WITH TIME ZONE,
+    email_change_token VARCHAR(255),
+    email_change VARCHAR(255),
+    email_change_sent_at TIMESTAMP WITH TIME ZONE,
+    last_sign_in_at TIMESTAMP WITH TIME ZONE,
+    raw_app_meta_data JSONB,
+    raw_user_meta_data JSONB,
+    is_super_admin BOOLEAN,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    phone VARCHAR(15) UNIQUE,
+    phone_confirmed_at TIMESTAMP WITH TIME ZONE,
+    phone_change VARCHAR(15),
+    phone_change_token VARCHAR(255),
+    phone_change_sent_at TIMESTAMP WITH TIME ZONE,
+    email_change_confirm_status SMALLINT DEFAULT 0 CHECK (email_change_confirm_status >= 0 AND email_change_confirm_status <= 2),
+    instance_id UUID,
+    banned_until TIMESTAMP WITH TIME ZONE,
+    reauthentication_token VARCHAR(255),
+    reauthentication_sent_at TIMESTAMP WITH TIME ZONE,
+    confirmed_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    email_change_token_new VARCHAR(255),
+    phone_change_token_new VARCHAR(255)
+);
+
+-- Create refresh_tokens table
+CREATE TABLE IF NOT EXISTS auth.refresh_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    token VARCHAR(255) NOT NULL,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    revoked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create instances table
 CREATE TABLE IF NOT EXISTS auth.instances (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    uuid uuid UNIQUE NOT NULL,
-    raw_base_config text,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+    id UUID PRIMARY KEY,
+    uuid UUID,
+    raw_base_config JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- MFA factors table
-CREATE TABLE IF NOT EXISTS auth.mfa_factors (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-    friendly_name text,
-    factor_type text NOT NULL,
-    status text NOT NULL,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+-- Create audit_log_entries table
+CREATE TABLE IF NOT EXISTS auth.audit_log_entries (
+    id UUID PRIMARY KEY,
+    payload JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- MFA challenges table
-CREATE TABLE IF NOT EXISTS auth.mfa_challenges (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    factor_id uuid REFERENCES auth.mfa_factors(id) ON DELETE CASCADE,
-    created_at timestamptz DEFAULT now(),
-    verified_at timestamptz,
-    ip_address inet
+-- Create schema_migrations table
+CREATE TABLE IF NOT EXISTS auth.schema_migrations (
+    version VARCHAR(255) PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- SAML providers table
-CREATE TABLE IF NOT EXISTS auth.saml_providers (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    sso_provider_id uuid NOT NULL,
-    entity_id text NOT NULL,
-    metadata_xml text NOT NULL,
-    metadata_url text,
-    attribute_mapping jsonb,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+-- Create groups table
+CREATE TABLE IF NOT EXISTS groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_by UUID, -- Will reference auth.users(id) after auth schema is created
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- SSO providers table
-CREATE TABLE IF NOT EXISTS auth.sso_providers (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    instance_id uuid REFERENCES auth.instances(id) ON DELETE CASCADE,
-    resource_id text,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+-- Create group_members table
+CREATE TABLE IF NOT EXISTS group_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
+    user_id UUID, -- Will reference auth.users(id) after auth schema is created
+    role VARCHAR(50) DEFAULT 'member',
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(group_id, user_id)
 );
 
--- SAML relay states table
-CREATE TABLE IF NOT EXISTS auth.saml_relay_states (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    sso_provider_id uuid NOT NULL,
-    request_id text NOT NULL,
-    for_email text,
-    redirect_to text,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
+-- Create invitations table
+CREATE TABLE IF NOT EXISTS invitations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL,
+    invited_by UUID, -- Will reference auth.users(id) after auth schema is created
+    role VARCHAR(50) DEFAULT 'member',
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '7 days')
 );
 
--- Create indexes for new tables
-CREATE INDEX IF NOT EXISTS mfa_factors_user_id_idx ON auth.mfa_factors(user_id);
-CREATE INDEX IF NOT EXISTS mfa_challenges_factor_id_idx ON auth.mfa_challenges(factor_id);
-CREATE INDEX IF NOT EXISTS saml_providers_sso_provider_id_idx ON auth.saml_providers(sso_provider_id);
-CREATE INDEX IF NOT EXISTS sso_providers_instance_id_idx ON auth.sso_providers(instance_id);
-CREATE INDEX IF NOT EXISTS saml_relay_states_sso_provider_id_idx ON auth.saml_relay_states(sso_provider_id); 
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_auth_users_email ON auth.users(email);
+CREATE INDEX IF NOT EXISTS idx_auth_users_instance_id_email ON auth.users(email);
+CREATE INDEX IF NOT EXISTS idx_auth_users_instance_id_phone ON auth.users(phone);
+CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_token ON auth.refresh_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_auth_refresh_tokens_user_id ON auth.refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_groups_created_by ON groups(created_by);
+CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_members_user_id ON group_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_invitations_group_id ON invitations(group_id);
+CREATE INDEX IF NOT EXISTS idx_invitations_email ON invitations(email);

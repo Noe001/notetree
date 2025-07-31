@@ -1,17 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { TestDatabaseModule } from './test-database.module';
 import { CreateGroupDto } from '../src/group/dto/create-group.dto';
 import { UpdateGroupDto } from '../src/group/dto/update-group.dto';
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: INestApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [TestDatabaseModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();

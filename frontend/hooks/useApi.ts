@@ -156,7 +156,9 @@ export function useMemos(userId?: string, groupId?: string) {
   const { data, loading, error, execute, reset, setData } = useApiState<Memo[]>();
 
   const fetchMemos = useCallback(() => {
-    execute(() => apiClient.getMemos(userId, groupId));
+    // groupIdがundefinedの場合はnullを渡して個人メモを取得
+    const groupIdForApi = groupId === undefined ? null : groupId;
+    execute(() => apiClient.getMemos(userId, groupIdForApi));
   }, [execute, userId, groupId]);
 
   const createMemo = useCallback(async (memoData: { title: string; content: string; tags?: string[]; isPrivate?: boolean; groupId?: string }) => {
@@ -271,4 +273,4 @@ export function useInvitations(groupId: string) {
     acceptInvitation,
     reset
   };
-} 
+}

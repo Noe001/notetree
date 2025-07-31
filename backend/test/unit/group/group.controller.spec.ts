@@ -1,19 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GroupController } from '@app/group/group.controller';
 import { GroupService } from '@app/group/group.service';
-import { GroupMemberRole } from '@app/group/group-member.entity';
 import { CreateGroupDto } from '@app/group/dto/create-group.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Group } from '@app/group/group.entity';
 import { GroupMember } from '@app/group/group-member.entity';
+import { GroupMemberRole } from '@app/group/types';
 
 const mockGroup: Group = {
   id: '1',
   name: 'Test Group',
   description: 'Test Description',
+  isPrivate: false,
   ownerId: 'test-owner-id',
   members: [],
   memos: [],
+  invitations: [],
   createdAt: new Date(),
   updatedAt: new Date()
 } as Group;
@@ -99,7 +101,7 @@ describe('GroupController', () => {
 
       jest.spyOn(groupService, 'findAll').mockResolvedValue(mockGroups);
 
-      const result = await controller.findAll();
+      const result = await controller.findAll({ user: { id: 'test-user' } } as any);
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockGroups);
       expect(groupService.findAll).toHaveBeenCalled();

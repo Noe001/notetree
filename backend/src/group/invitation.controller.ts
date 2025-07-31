@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Param, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Query, Param, HttpException, HttpStatus, Logger, Delete } from '@nestjs/common';
 import { InvitationService } from './invitation.service';
 
 @Controller('invitations')
@@ -21,12 +21,39 @@ export class InvitationController {
         data: member,
         message: 'Invitation accepted successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error accepting invitation: ${error.message}`);
       throw new HttpException(
         {
           success: false,
           message: 'Failed to accept invitation',
+          error: error.name
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  @Post('reject')
+  async rejectInvitation(@Query('token') token: string) {
+    try {
+      this.logger.log(`POST /invitations/reject called with token: ${token}`);
+      if (!token) {
+        throw new HttpException('Token is required', HttpStatus.BAD_REQUEST);
+      }
+      
+      // 招待を削除または拒否済みとしてマーク
+      await this.invitationService.cancelInvitationByToken(token);
+      return {
+        success: true,
+        message: 'Invitation rejected successfully'
+      };
+    } catch (error: any) {
+      this.logger.error(`Error rejecting invitation: ${error.message}`);
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Failed to reject invitation',
           error: error.name
         },
         HttpStatus.BAD_REQUEST
@@ -47,7 +74,7 @@ export class InvitationController {
         success: true,
         message: 'Invitation canceled successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error canceling invitation: ${error.message}`);
       throw new HttpException(
         {
@@ -59,4 +86,4 @@ export class InvitationController {
       );
     }
   }
-} 
+}

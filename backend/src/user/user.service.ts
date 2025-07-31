@@ -18,7 +18,6 @@ export class UserService {
     try {
       this.logger.log(`Creating user: ${createUserDto.email}`);
 
-      // メールアドレスの重複チェック
       const existingUser = await this.userRepository.findOne({
         where: { email: createUserDto.email }
       });
@@ -31,7 +30,7 @@ export class UserService {
 
       this.logger.log(`User created successfully with ID: ${savedUser.id}`);
       return savedUser;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to create user: ${error.message}`, error.stack);
       throw error;
     }
@@ -45,7 +44,7 @@ export class UserService {
       });
       this.logger.log(`Found ${users.length} users`);
       return users;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to fetch users: ${error.message}`, error.stack);
       throw error;
     }
@@ -64,7 +63,7 @@ export class UserService {
 
       this.logger.log(`Found ${users.length} users matching query`);
       return users;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to search users: ${error.message}`, error.stack);
       throw error;
     }
@@ -84,7 +83,7 @@ export class UserService {
       }
 
       return user;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to fetch user ${id}: ${error.message}`, error.stack);
       throw error;
     }
@@ -100,7 +99,7 @@ export class UserService {
       });
 
       return user;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to fetch user by email ${email}: ${error.message}`, error.stack);
       throw error;
     }
@@ -125,12 +124,18 @@ export class UserService {
         }
       }
 
-      await this.userRepository.update(id, updateUserDto);
+      // パスワードの更新は別途専用のメソッドを用意することを推奨
+      const { password, ...restOfUpdates } = updateUserDto;
+      if (password) {
+        this.logger.warn(`Password updates are not supported via the general update method for user ${id}`);
+      }
+
+      await this.userRepository.update(id, restOfUpdates);
       const updatedUser = await this.findOne(id);
 
       this.logger.log(`User ${id} updated successfully`);
       return updatedUser;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to update user ${id}: ${error.message}`, error.stack);
       throw error;
     }
@@ -147,9 +152,9 @@ export class UserService {
 
       await this.userRepository.delete(id);
       this.logger.log(`User ${id} deleted successfully`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to delete user ${id}: ${error.message}`, error.stack);
       throw error;
     }
   }
-} 
+}

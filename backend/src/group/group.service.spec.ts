@@ -5,6 +5,7 @@ import { Group } from './group.entity';
 import { GroupMember } from './group-member.entity';
 import { User } from '../user/user.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { GroupMemberRole } from './types';
 
 describe('GroupService', () => {
   let service: GroupService;
@@ -19,15 +20,16 @@ describe('GroupService', () => {
   };
 
   const mockGroup = {
-    id: 1,
+    id: '1',
     name: '仕事',
     description: '仕事関連のメモ',
+    isPrivate: false,
     ownerId: 'user1'
   };
 
   const mockGroupMember = {
-    id: 1,
-    groupId: 1,
+    id: '1',
+    groupId: '1',
     userId: 'user1',
     role: 'owner'
   };
@@ -74,11 +76,10 @@ describe('GroupService', () => {
   describe('create()', () => {
     it('should create a group and add owner as member', async () => {
       const createDto: CreateGroupDto = {
-        name: '仕事',
-        ownerId: 'user1'
+        name: '仕事'
       };
 
-      const result = await service.create(createDto);
+      const result = await service.create(createDto, 'user1');
       expect(result).toEqual(mockGroup);
       expect(groupRepository.create).toHaveBeenCalledWith(createDto);
       expect(groupMemberRepository.create).toHaveBeenCalledWith({
@@ -91,36 +92,35 @@ describe('GroupService', () => {
     it('should throw error when user not found', async () => {
       userRepository.findOne.mockResolvedValue(null);
       const createDto: CreateGroupDto = {
-        name: '仕事',
-        ownerId: 'invalid-user'
+        name: '仕事'
       };
 
-      await expect(service.create(createDto)).rejects.toThrow();
+      await expect(service.create(createDto, 'invalid-user')).rejects.toThrow();
     });
   });
 
   describe('addMember()', () => {
     it('should add a member to group', async () => {
-      const result = await service.addMember(1, 'user2', 'member');
+      const result = await service.addMember('1', 'user2', GroupMemberRole.MEMBER);
       expect(result).toEqual(mockGroupMember);
       expect(groupMemberRepository.create).toHaveBeenCalledWith({
-        groupId: 1,
+        groupId: '1',
         userId: 'user2',
-        role: 'member'
+        role: GroupMemberRole.MEMBER
       });
     });
 
     it('should throw error when group not found', async () => {
       groupRepository.findOne.mockResolvedValue(null);
-      await expect(service.addMember(999, 'user2', 'member')).rejects.toThrow();
+      await expect(service.addMember('999', 'user2', GroupMemberRole.MEMBER)).rejects.toThrow();
     });
   });
 
   describe('removeMember()', () => {
     it('should remove a member from group', async () => {
-      await service.removeMember(1, 'user1');
+      await service.removeMember('1', 'user1');
       expect(groupMemberRepository.delete).toHaveBeenCalledWith({
-        groupId: 1,
+        groupId: '1',
         userId: 'user1'
       });
     });
@@ -130,7 +130,7 @@ describe('GroupService', () => {
         ...mockGroupMember,
         role: 'owner'
       }]);
-      await expect(service.removeMember(1, 'user1')).rejects.toThrow();
+      await expect(service.removeMember('1', 'user1')).rejects.toThrow();
     });
   });
 
@@ -144,9 +144,9 @@ describe('GroupService', () => {
 
   describe('findOne()', () => {
     it('should return a group by id', async () => {
-      const result = await service.findOne(1);
+      const result = await service.findOne('1');
       expect(result).toEqual(mockGroup);
-      expect(groupRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(groupRepository.findOne).toHaveBeenCalledWith({ where: { id: '1' } });
     });
   });
 });

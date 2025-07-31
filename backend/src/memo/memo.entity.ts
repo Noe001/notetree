@@ -5,32 +5,32 @@ import { Group } from '../group/group.entity';
 @Entity()
 export class Memo {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column('text')
-  content: string;
+  content!: string;
 
   @Column('simple-array', { nullable: true })
-  tags: string[];
+  tags!: string[];
 
   @Column({ default: false })
-  isPrivate: boolean;
+  isPrivate!: boolean;
 
   @Column({ nullable: true })
-  groupId: string | null;
+  groupId!: string | null;
 
   @ManyToOne(() => User, (user) => user.memos)
-  user: User;
+  user!: User;
 
   @ManyToOne(() => Group, (group) => group.memos, { nullable: true })
-  group: Group;
+  group!: Group;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

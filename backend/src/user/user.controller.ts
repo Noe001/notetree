@@ -19,7 +19,7 @@ export class UserController {
         data: user,
         message: 'User created successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error creating user: ${error.message}`);
       throw new HttpException(
         {
@@ -42,7 +42,7 @@ export class UserController {
         data: users,
         count: users.length
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error fetching users: ${error.message}`);
       throw new HttpException(
         {
@@ -68,7 +68,7 @@ export class UserController {
         data: users,
         count: users.length
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error searching users: ${error.message}`);
       throw new HttpException(
         {
@@ -90,7 +90,7 @@ export class UserController {
         success: true,
         data: user
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error fetching user ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -113,7 +113,7 @@ export class UserController {
         data: user,
         message: 'User updated successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error updating user ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -135,7 +135,7 @@ export class UserController {
         success: true,
         message: 'User deleted successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error deleting user ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -147,4 +147,4 @@ export class UserController {
       );
     }
   }
-} 
+}
