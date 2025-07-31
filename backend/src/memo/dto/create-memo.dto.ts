@@ -4,21 +4,21 @@ export class CreateMemoDto {
   @IsString()
   @IsOptional()
   @MaxLength(200)
-  title?: string;
+  title!: string;
 
   @IsString()
   @IsOptional()
-  content?: string;
+  content!: string;
 
   @IsArray()
   @IsOptional()
-  tags?: string[];
+  tags!: string[];
 
   @IsBoolean()
   @IsOptional()
-  isPrivate?: boolean;
+  isPrivate!: boolean;
 
-  // @IsString()
-  // @IsOptional()
-  // groupId?: string;
-} 
+  @IsString()
+  @IsOptional()
+  groupId?: string;
+}

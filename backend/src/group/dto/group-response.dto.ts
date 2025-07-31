@@ -4,25 +4,25 @@ import { User } from '../../user/user.entity';
 
 export class GroupResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiProperty()
-  description: string;
+  description!: string;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty()
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ApiProperty({ type: () => [MemberResponseDto] })
-  members: MemberResponseDto[];
+  members!: MemberResponseDto[];
 
   @ApiProperty({ type: () => [InvitationResponseDto] })
-  invitations: InvitationResponseDto[];
+  invitations!: InvitationResponseDto[];
 
   constructor(group: Group) {
     this.id = group.id;
@@ -37,13 +37,13 @@ export class GroupResponseDto {
 
 export class MemberResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  username: string;
+  username!: string;
 
   @ApiProperty()
-  email: string;
+  email!: string;
 
   constructor(user: User) {
     this.id = user.id;
@@ -54,16 +54,16 @@ export class MemberResponseDto {
 
 export class InvitationResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  email: string;
+  email!: string;
 
   @ApiProperty()
-  status: string;
+  status!: string;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   constructor(invitation: any) {
     this.id = invitation.id;

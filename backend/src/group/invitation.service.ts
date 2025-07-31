@@ -2,9 +2,10 @@ import { Injectable, NotFoundException, Logger, BadRequestException } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Invitation } from './invitation.entity';
+import { GroupMemberRole } from './types';
 import { Group } from './group.entity';
 import { User } from '../user/user.entity';
-import { GroupMember, GroupMemberRole } from './group-member.entity';
+import { GroupMember } from './group-member.entity';
 import { UserService } from '../user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -50,7 +51,9 @@ export class InvitationService {
       }
 
       // 既存メンバー確認
-      const existingMember = group.members.find(member => member.user && member.user.email === email);
+      const existingMember = group.members.find(member => 
+        member.user && (member.user.email === email || member.user.id === invitedUser?.id)
+      );
       if (existingMember) {
         throw new BadRequestException('User is already a member of this group');
       }
@@ -87,7 +90,7 @@ export class InvitationService {
       const savedInvitation = await this.invitationRepository.save(invitation) as Invitation;
       this.logger.log(`Invitation created with token: ${token}`);
       return savedInvitation;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to create invitation: ${error.message}`, error.stack);
       throw error;
     }
@@ -140,7 +143,7 @@ export class InvitationService {
 
       this.logger.log(`Invitation accepted for user ${user.email}`);
       return savedMember;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to accept invitation: ${error.message}`, error.stack);
       throw error;
     }
@@ -157,7 +160,7 @@ export class InvitationService {
       });
 
       return invitations;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to fetch group invitations: ${error.message}`, error.stack);
       throw error;
     }
@@ -177,15 +180,85 @@ export class InvitationService {
       }
 
       // 権限確認
-      if (invitation.invitedById !== userId && invitation.group.ownerId !== userId) {
+      const group = await this.groupRepository.findOne({
+        where: { id: invitation.groupId },
+        relations: ['members', 'members.user']
+      });
+
+      if (!group) {
+        throw new NotFoundException('Group not found');
+      }
+
+      const isAdmin = group.members.some(member => 
+        member.user && member.user.id === userId && 
+        (member.role === GroupMemberRole.ADMIN || member.role === GroupMemberRole.OWNER || group.ownerId === userId)
+      );
+
+      if (invitation.invitedById !== userId && !isAdmin) {
         throw new BadRequestException('You do not have permission to cancel this invitation');
       }
 
       await this.invitationRepository.delete(invitationId);
       this.logger.log(`Invitation ${invitationId} canceled`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to cancel invitation: ${error.message}`, error.stack);
       throw error;
     }
   }
-} 
+
+  async cancelInvitationByToken(token: string): Promise<void> {
+    try {
+      this.logger.log(`Canceling invitation by token: ${token}`);
+
+      const invitation = await this.invitationRepository.findOne({
+        where: { token }
+      });
+
+      if (!invitation) {
+        throw new NotFoundException('Invitation not found');
+      }
+
+      await this.invitationRepository.delete({ token });
+      this.logger.log(`Invitation with token ${token} canceled`);
+    } catch (error: any) {
+      this.logger.error(`Failed to cancel invitation by token: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async findByToken(token: string): Promise<Invitation | null> {
+    try {
+      this.logger.log(`Finding invitation by token: ${token}`);
+
+      const invitation = await this.invitationRepository.findOne({
+        where: { token },
+        relations: ['group']
+      });
+
+      return invitation;
+    } catch (error: any) {
+      this.logger.error(`Failed to find invitation by token: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async removeByToken(token: string): Promise<void> {
+    try {
+      this.logger.log(`Removing invitation by token: ${token}`);
+
+      const invitation = await this.invitationRepository.findOne({
+        where: { token }
+      });
+
+      if (!invitation) {
+        throw new NotFoundException('Invitation not found');
+      }
+
+      await this.invitationRepository.delete({ token });
+      this.logger.log(`Invitation with token ${token} removed`);
+    } catch (error: any) {
+      this.logger.error(`Failed to remove invitation by token: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+}

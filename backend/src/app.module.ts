@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-// import { GroupModule } from './group/group.module';
+import { GroupModule } from './group/group.module';
 import { MemoModule } from './memo/memo.module';
 import { UserModule } from './user/user.module';
-// import { Invitation } from './group/invitation.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -15,7 +15,8 @@ import { UserModule } from './user/user.module';
       autoLoadEntities: true,
       synchronize: true, // 開発環境のみ
     }),
-    // GroupModule, // 一時的に無効化
+    AuthModule,
+    GroupModule,
     MemoModule,
     UserModule,
   ],

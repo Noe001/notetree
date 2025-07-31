@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus, Loader2 } from 'lucide-react'
+import { X, Plus, Loader2, AlertCircle } from 'lucide-react'
 
 interface Memo {
   id: string
@@ -50,6 +50,7 @@ export function MemoEditDialog({
   const [currentTag, setCurrentTag] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // メモが変更されたときにフォームを初期化
   useEffect(() => {
@@ -59,6 +60,7 @@ export function MemoEditDialog({
       setTags([...memo.tags])
       setIsPrivate(memo.isPrivate)
       setCurrentTag('')
+      setError(null)
     }
   }, [memo, open])
 
@@ -82,11 +84,13 @@ export function MemoEditDialog({
 
   const handleUpdate = async () => {
     if (!memo || !title.trim() || !content.trim()) {
-      alert('タイトルと内容を入力してください')
+      setError('タイトルと内容を入力してください')
       return
     }
 
     setLoading(true)
+    setError(null)
+    
     try {
       await onUpdateMemo(memo.id, {
         title: title.trim(),
@@ -96,9 +100,9 @@ export function MemoEditDialog({
       })
       
       onOpenChange(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('メモ更新エラー:', error)
-      alert('メモの更新に失敗しました')
+      setError(error.message || 'メモの更新に失敗しました')
     } finally {
       setLoading(false)
     }
@@ -111,6 +115,7 @@ export function MemoEditDialog({
       setTags([...memo.tags])
       setIsPrivate(memo.isPrivate)
       setCurrentTag('')
+      setError(null)
     }
     onOpenChange(false)
   }
@@ -128,6 +133,14 @@ export function MemoEditDialog({
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* エラーメッセージ */}
+          {error && (
+            <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           {/* タイトル */}
           <div className="space-y-2">
             <Label htmlFor="edit-memo-title">タイトル *</Label>

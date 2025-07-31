@@ -278,54 +278,177 @@ export function optimizeImage(
   return `${src}?${params.toString()}`
 }
 
-// パフォーマンス計測ユーティリティ
-export class PerformanceMonitor {
-  private static instance: PerformanceMonitor
-  private marks = new Map<string, number>()
+/**
+ * 本番環境でのパフォーマンス監視とエラーハンドリング
+ */
 
-  static getInstance(): PerformanceMonitor {
-    if (!PerformanceMonitor.instance) {
-      PerformanceMonitor.instance = new PerformanceMonitor()
+export interface PerformanceMetrics {
+  pageLoadTime: number;
+  apiResponseTime: number;
+  memoryUsage?: number;
+  errorCount: number;
+}
+
+class PerformanceMonitor {
+  private metrics: PerformanceMetrics = {
+    pageLoadTime: 0,
+    apiResponseTime: 0,
+    errorCount: 0
+  };
+
+  private startTime: number = 0;
+
+  constructor() {
+    this.initializeMonitoring();
+  }
+
+  private initializeMonitoring() {
+    // ページロード時間の測定
+    if (typeof window !== 'undefined') {
+      window.addEventListener('load', () => {
+        this.metrics.pageLoadTime = performance.now();
+        this.logMetric('pageLoad', this.metrics.pageLoadTime);
+      });
+
+      // エラーの監視
+      window.addEventListener('error', (event) => {
+        this.metrics.errorCount++;
+        this.logError('JavaScript Error', {
+          message: event.message,
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          error: event.error?.stack
+        });
+      });
+
+      // 未処理のPromise拒否の監視
+      window.addEventListener('unhandledrejection', (event) => {
+        this.metrics.errorCount++;
+        this.logError('Unhandled Promise Rejection', {
+          reason: event.reason
+        });
+      });
     }
-    return PerformanceMonitor.instance
   }
 
-  startMeasure(name: string): void {
-    this.marks.set(name, performance.now())
+  startApiTimer() {
+    this.startTime = performance.now();
   }
 
-  endMeasure(name: string): number {
-    const startTime = this.marks.get(name)
-    if (startTime === undefined) {
-      console.warn(`No start mark found for: ${name}`)
-      return 0
+  endApiTimer() {
+    if (this.startTime > 0) {
+      const responseTime = performance.now() - this.startTime;
+      this.metrics.apiResponseTime = responseTime;
+      this.logMetric('apiResponse', responseTime);
+      this.startTime = 0;
     }
-
-    const duration = performance.now() - startTime
-    this.marks.delete(name)
-    
-    console.log(`Performance: ${name} took ${duration.toFixed(2)}ms`)
-    return duration
   }
 
-  measureFunction<T extends (...args: any[]) => any>(
-    name: string,
-    fn: T
-  ): T {
-    return ((...args: any[]) => {
-      this.startMeasure(name)
-      const result = fn(...args)
+  private logMetric(type: string, value: number) {
+    if (process.env.NODE_ENV === 'production') {
+      // 本番環境では外部の監視サービスに送信
+      console.log(`[Performance] ${type}: ${value.toFixed(2)}ms`);
       
-      if (result instanceof Promise) {
-        return result.finally(() => {
-          this.endMeasure(name)
-        })
-      } else {
-        this.endMeasure(name)
-        return result
-      }
-    }) as T
+      // 実際の本番環境では、AnalyticsやMonitoringサービスに送信
+      // this.sendToAnalytics(type, value);
+    } else {
+      console.log(`[Performance] ${type}: ${value.toFixed(2)}ms`);
+    }
+  }
+
+  logError(type: string, details: any) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error(`[Error] ${type}:`, details);
+      
+      // 実際の本番環境では、Error Trackingサービスに送信
+      // this.sendToErrorTracking(type, details);
+    } else {
+      console.error(`[Error] ${type}:`, details);
+    }
+  }
+
+  getMetrics(): PerformanceMetrics {
+    return { ...this.metrics };
+  }
+
+  resetMetrics() {
+    this.metrics = {
+      pageLoadTime: 0,
+      apiResponseTime: 0,
+      errorCount: 0
+    };
   }
 }
 
-export const performanceMonitor = PerformanceMonitor.getInstance() 
+export const performanceMonitor = new PerformanceMonitor();
+
+/**
+ * API呼び出しのパフォーマンス監視用のラッパー
+ */
+export function withPerformanceMonitoring<T>(
+  apiCall: () => Promise<T>,
+  operationName: string = 'API Call'
+): Promise<T> {
+  return new Promise(async (resolve, reject) => {
+    performanceMonitor.startApiTimer();
+    
+    try {
+      const result = await apiCall();
+      performanceMonitor.endApiTimer();
+      resolve(result);
+    } catch (error) {
+      performanceMonitor.endApiTimer();
+      performanceMonitor.logError(operationName, error);
+      reject(error);
+    }
+  });
+}
+
+/**
+ * 本番環境でのエラーバウンダリー用のユーティリティ
+ */
+export function createErrorBoundary() {
+  return {
+    onError: (error: Error, errorInfo: any) => {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('React Error Boundary caught an error:', error, errorInfo);
+        // 実際の本番環境では、Error Trackingサービスに送信
+        // this.sendToErrorTracking('React Error', { error, errorInfo });
+      } else {
+        console.error('React Error Boundary caught an error:', error, errorInfo);
+      }
+    }
+  };
+}
+
+/**
+ * 本番環境でのメモリ使用量監視
+ */
+export function monitorMemoryUsage() {
+  if (typeof window !== 'undefined' && 'memory' in performance) {
+    const memory = (performance as any).memory;
+    return {
+      usedJSHeapSize: memory.usedJSHeapSize,
+      totalJSHeapSize: memory.totalJSHeapSize,
+      jsHeapSizeLimit: memory.jsHeapSizeLimit
+    };
+  }
+  return null;
+}
+
+/**
+ * 本番環境でのネットワーク状態監視
+ */
+export function monitorNetworkStatus() {
+  if (typeof navigator !== 'undefined' && 'connection' in navigator) {
+    const connection = (navigator as any).connection;
+    return {
+      effectiveType: connection.effectiveType,
+      downlink: connection.downlink,
+      rtt: connection.rtt,
+      saveData: connection.saveData
+    };
+  }
+  return null;
+} 

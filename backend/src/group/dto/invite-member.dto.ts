@@ -1,16 +1,16 @@
 import { IsString, IsEmail, IsOptional, IsEnum } from 'class-validator';
-import { GroupMemberRole } from '../group-member.entity';
+import { GroupMemberRole } from '../types';
 
 export class InviteMemberDto {
-  @IsEmail()
-  @IsOptional()
-  email?: string;
-
   @IsString()
   @IsOptional()
   userId?: string;
 
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
   @IsEnum(GroupMemberRole)
   @IsOptional()
-  role?: GroupMemberRole = GroupMemberRole.MEMBER;
-} 
+  role?: GroupMemberRole;
+}

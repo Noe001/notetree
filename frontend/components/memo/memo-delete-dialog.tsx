@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, AlertTriangle } from 'lucide-react'
+import { Loader2, AlertTriangle, AlertCircle } from 'lucide-react'
 
 interface Memo {
   id: string
@@ -34,17 +34,20 @@ export function MemoDeleteDialog({
   onDeleteMemo 
 }: MemoDeleteDialogProps) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleDelete = async () => {
     if (!memo) return
 
     setLoading(true)
+    setError(null)
+    
     try {
       await onDeleteMemo(memo.id)
       onOpenChange(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('メモ削除エラー:', error)
-      alert('メモの削除に失敗しました')
+      setError(error.message || 'メモの削除に失敗しました')
     } finally {
       setLoading(false)
     }
@@ -66,6 +69,14 @@ export function MemoDeleteDialog({
         </DialogHeader>
         
         <div className="space-y-4 py-4">
+          {/* エラーメッセージ */}
+          {error && (
+            <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           {/* メモ情報プレビュー */}
           <div className="p-4 bg-muted rounded-lg border space-y-3">
             <div>

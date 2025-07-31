@@ -21,8 +21,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export interface AuthUser {
   id: string
   email: string
+  created_at?: string
   user_metadata: {
     name?: string
+    display_name?: string
     avatar_url?: string
     provider?: string
   }

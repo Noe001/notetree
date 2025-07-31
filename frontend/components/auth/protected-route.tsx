@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { AuthForm } from './auth-form'
 import { Loader2 } from 'lucide-react'
@@ -9,7 +9,16 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  const { user, loading } = useAuth()
+  const { user, loading, session } = useAuth()
+
+  // セッション切れ時の自動リダイレクト
+  useEffect(() => {
+    if (!loading && !user && session === null) {
+      // セッションが切れている場合は認証情報をクリア
+      localStorage.removeItem('notetree_user')
+      localStorage.removeItem('notetree_session')
+    }
+  }, [user, loading, session])
 
   // ローディング中は読み込み画面を表示
   if (loading) {

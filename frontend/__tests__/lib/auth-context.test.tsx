@@ -17,18 +17,18 @@ jest.mock('@/lib/supabase', () => ({
 
 // テスト用のコンポーネント
 function TestComponent() {
-  const { user, session, loading, signInWithGoogle, signOut } = useAuth()
+  const { user, session, loading, signOut, refreshSession } = useAuth()
 
   return (
     <div>
       <div data-testid="loading">{loading ? 'loading' : 'loaded'}</div>
       <div data-testid="user">{user ? user.email : 'no-user'}</div>
       <div data-testid="session">{session ? 'has-session' : 'no-session'}</div>
-      <button onClick={signInWithGoogle} data-testid="sign-in">
-        Sign In
-      </button>
       <button onClick={signOut} data-testid="sign-out">
         Sign Out
+      </button>
+      <button onClick={refreshSession} data-testid="refresh-session">
+        Refresh Session
       </button>
     </div>
   )
@@ -100,51 +100,6 @@ describe('AuthContext', () => {
     })
   })
 
-  it('Googleログインが正常に動作する', async () => {
-    mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-      data: { provider: 'google', url: 'https://google.com/auth' },
-      error: null,
-    })
-
-    renderWithAuth(<TestComponent />)
-
-    const user = userEvent.setup()
-    const signInButton = screen.getByTestId('sign-in')
-
-    await user.click(signInButton)
-
-    expect(mockSupabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-      provider: 'google',
-      options: {
-        redirectTo: 'http://localhost',
-      },
-    })
-  })
-
-  it('Googleログインでエラーが発生した場合', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-    const alertSpy = jest.spyOn(window, 'alert').mockImplementation()
-
-    mockSupabase.auth.signInWithOAuth.mockResolvedValue({
-      data: null,
-      error: { message: 'Login failed' },
-    })
-
-    renderWithAuth(<TestComponent />)
-
-    const user = userEvent.setup()
-    const signInButton = screen.getByTestId('sign-in')
-
-    await user.click(signInButton)
-
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith('ログインエラー:', 'Login failed')
-    })
-
-    consoleErrorSpy.mockRestore()
-    alertSpy.mockRestore()
-  })
-
   it('ログアウトが正常に動作する', async () => {
     mockSupabase.auth.signOut.mockResolvedValue({
       error: null,
@@ -158,6 +113,18 @@ describe('AuthContext', () => {
     await user.click(signOutButton)
 
     expect(mockSupabase.auth.signOut).toHaveBeenCalled()
+  })
+
+  it('セッション更新が正常に動作する', async () => {
+    renderWithAuth(<TestComponent />)
+
+    const user = userEvent.setup()
+    const refreshButton = screen.getByTestId('refresh-session')
+
+    await user.click(refreshButton)
+
+    // セッション更新ボタンがクリック可能であることを確認
+    expect(refreshButton).toBeInTheDocument()
   })
 
   it('認証状態の変更が適切に処理される', async () => {

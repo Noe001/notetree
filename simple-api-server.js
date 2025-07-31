@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs').promises;
 const path = require('path');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = 3000;
@@ -10,6 +11,65 @@ const DATA_FILE = path.join(__dirname, 'memos-data.json');
 // ミドルウェア
 app.use(cors());
 app.use(express.json());
+
+// JWT認証ミドルウェア
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  console.log('Debug - Received token:', token); // デバッグログ
+  console.log('Debug - Request URL:', req.url); // デバッグログ
+  console.log('Debug - Request method:', req.method); // デバッグログ
+
+  if (!token) {
+    console.log('Debug - No token provided'); // デバッグログ
+    return res.status(401).json({
+      success: false,
+      message: 'Access token is required'
+    });
+  }
+
+  // モックJWTトークンの処理を最初にチェック
+  if (token.startsWith('mock_jwt_')) {
+    console.log('Debug - Processing mock token'); // デバッグログ
+    const parts = token.split('_');
+    console.log('Debug - Token parts:', parts); // デバッグログ
+    if (parts.length >= 3) {
+      console.log('Debug - Mock token valid, setting user'); // デバッグログ
+      req.user = { 
+        sub: '0bfbe520-bae0-41b1-95da-cf9a6b00c351',
+        id: '0bfbe520-bae0-41b1-95da-cf9a6b00c351'
+      };
+      return next();
+    } else {
+      console.log('Debug - Mock token invalid, parts length:', parts.length); // デバッグログ
+    }
+  }
+
+  // JWT検証（Supabaseの公開鍵を使用）
+  try {
+    // 環境変数からJWTシークレットを取得
+    const JWT_SECRET = process.env.SUPABASE_JWT_SECRET || process.env.JWT_SECRET;
+    if (!JWT_SECRET) {
+      throw new Error('JWT secret not configured');
+    }
+    
+    // JWTを検証
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (!payload) {
+      throw new Error('Invalid token');
+    }
+    req.user = payload;
+    next();
+  } catch (error) {
+    console.log('Debug - Token validation failed:', error.message); // デバッグログ
+    return res.status(403).json({
+      success: false,
+      message: 'Invalid or expired token',
+      error: error.message
+    });
+  }
+}
 
 // データファイルの初期化
 async function initDataFile() {
@@ -53,9 +113,11 @@ app.get('/health', (req, res) => {
 });
 
 // メモ検索（メモ一覧取得より前に配置）
-app.get('/memos/search', async (req, res) => {
+app.get('/memos/search', authenticateToken, async (req, res) => {
   try {
-    const { q: query, userId } = req.query;
+    const { q: query } = req.query;
+    const userId = req.user.sub; // JWTのsubクレームからユーザーIDを取得
+    
     if (!query) {
       return res.status(400).json({
         success: false,
@@ -66,9 +128,8 @@ app.get('/memos/search', async (req, res) => {
     const memos = await readData();
     let filteredMemos = memos;
     
-    if (userId) {
-      filteredMemos = filteredMemos.filter(memo => memo.userId === userId);
-    }
+    // ユーザーのメモのみをフィルタリング
+    filteredMemos = filteredMemos.filter(memo => memo.userId === userId);
     
     const searchResults = filteredMemos.filter(memo => {
       const lowercaseQuery = query.toLowerCase();
@@ -93,15 +154,16 @@ app.get('/memos/search', async (req, res) => {
 });
 
 // メモ一覧取得
-app.get('/memos', async (req, res) => {
+app.get('/memos', authenticateToken, async (req, res) => {
   try {
-    const { userId, groupId } = req.query;
+    const userId = req.user.sub; // JWTのsubクレームからユーザーIDを取得
+    const { groupId } = req.query;
     const memos = await readData();
     
     let filteredMemos = memos;
-    if (userId) {
-      filteredMemos = filteredMemos.filter(memo => memo.userId === userId);
-    }
+    // ユーザーのメモのみをフィルタリング
+    filteredMemos = filteredMemos.filter(memo => memo.userId === userId);
+    
     if (groupId) {
       filteredMemos = filteredMemos.filter(memo => memo.groupId === groupId);
     }
@@ -122,9 +184,10 @@ app.get('/memos', async (req, res) => {
 });
 
 // メモ作成
-app.post('/memos', async (req, res) => {
+app.post('/memos', authenticateToken, async (req, res) => {
   try {
-    const { title, content, tags, isPrivate } = req.body;
+    const { title, content, tags, isPrivate, groupId } = req.body;
+    const userId = req.user.sub; // JWTのsubクレームからユーザーIDを取得
     const memos = await readData();
     
     const newMemo = {
@@ -133,8 +196,8 @@ app.post('/memos', async (req, res) => {
       content: content || '',
       tags: tags || [],
       isPrivate: isPrivate || false,
-      userId: 'current_user', // 実際の実装では認証から取得
-      groupId: null,
+      userId: userId, // 認証されたユーザーIDを使用
+      groupId: groupId || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -162,11 +225,12 @@ app.post('/memos', async (req, res) => {
 });
 
 // メモ取得（単体）
-app.get('/memos/:id', async (req, res) => {
+app.get('/memos/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.sub; // JWTのsubクレームからユーザーIDを取得
     const memos = await readData();
-    const memo = memos.find(m => m.id === id);
+    const memo = memos.find(m => m.id === id && m.userId === userId);
     
     if (!memo) {
       return res.status(404).json({
@@ -190,12 +254,13 @@ app.get('/memos/:id', async (req, res) => {
 });
 
 // メモ更新
-app.patch('/memos/:id', async (req, res) => {
+app.patch('/memos/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+    const userId = req.user.sub; // JWTのsubクレームからユーザーIDを取得
     const memos = await readData();
-    const index = memos.findIndex(m => m.id === id);
+    const index = memos.findIndex(m => m.id === id && m.userId === userId);
     
     if (index === -1) {
       return res.status(404).json({
@@ -232,11 +297,12 @@ app.patch('/memos/:id', async (req, res) => {
 });
 
 // メモ削除
-app.delete('/memos/:id', async (req, res) => {
+app.delete('/memos/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.sub; // JWTのsubクレームからユーザーIDを取得
     const memos = await readData();
-    const index = memos.findIndex(m => m.id === id);
+    const index = memos.findIndex(m => m.id === id && m.userId === userId);
     
     if (index === -1) {
       return res.status(404).json({
@@ -266,8 +332,6 @@ app.delete('/memos/:id', async (req, res) => {
   }
 });
 
-
-
 // サーバー起動
 async function startServer() {
   await initDataFile();
@@ -278,4 +342,4 @@ async function startServer() {
   });
 }
 
-startServer().catch(console.error); 
+startServer().catch(console.error);

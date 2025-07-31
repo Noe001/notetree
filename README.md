@@ -168,7 +168,7 @@ docker-compose exec db psql -U postgres
 
 - **フロントエンド**: Next.js 15, React 18, TypeScript, Tailwind CSS
 - **バックエンド**: NestJS, TypeORM, PostgreSQL
-- **認証**: Supabase Auth + Google OAuth
+- **認証**: Supabase Auth
 - **リアルタイム**: WebSocket
 - **コンテナ**: Docker, Docker Compose
 - **テスト**: Jest, React Testing Library, Playwright
@@ -189,7 +189,7 @@ Supabase Authを使用して認証機能を提供しています：
 - JWT認証
 - ユーザー登録・ログイン
 - セッション管理
-- Google OAuth対応
+
 
 ## 🤝 コントリビューション
 
@@ -201,4 +201,4 @@ Supabase Authを使用して認証機能を提供しています：
 
 ## 📄 ライセンス
 
-このプロジェクトはISCライセンスの下で公開されています。
+このプロジェクトはMITライセンスの下で公開されています。

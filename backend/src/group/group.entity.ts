@@ -6,29 +6,32 @@ import { Invitation } from './invitation.entity';
 @Entity()
 export class Group {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ nullable: true })
-  description: string;
+  description!: string;
+
+  @Column({ default: false })
+  isPrivate!: boolean;
 
   @Column()
-  ownerId: string;
+  ownerId!: string;
 
   @OneToMany(() => GroupMember, (member) => member.group)
-  members: GroupMember[];
+  members!: GroupMember[];
 
   @OneToMany(() => Memo, (memo) => memo.group)
-  memos: Memo[];
+  memos!: Memo[];
 
   @OneToMany(() => Invitation, (invitation) => invitation.group)
-  invitations: Invitation[];
+  invitations!: Invitation[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

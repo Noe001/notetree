@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   
+  // 本番環境での最適化
+  output: 'standalone',
+  
   // セキュリティヘッダーの設定
   async headers() {
     return [
@@ -13,12 +16,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "font-src 'self'",
               "img-src 'self' data: https:",
               "connect-src 'self' https://*.supabase.com https://*.supabase.co wss://*.supabase.com wss://*.supabase.co http://localhost:8000 http://localhost:3000 http://localhost:3001 http://localhost:8080 ws://localhost:8000 ws://localhost:8080",
-              "frame-src https://accounts.google.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -75,6 +77,23 @@ const nextConfig = {
       config.devtool = false
     }
     
+    // 本番環境での最適化
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+          },
+        },
+      }
+    }
+    
     return config
   },
   
@@ -91,6 +110,9 @@ const nextConfig = {
   experimental: {
     // セキュリティ関連の実験的機能
     strictNextHead: true,
+    // 本番環境での最適化
+    optimizeCss: true,
+    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
   }
 }
 

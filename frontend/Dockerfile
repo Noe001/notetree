@@ -1,13 +1,41 @@
-FROM node:18-alpine
+# 本番環境用のマルチステージビルド
+FROM node:18-alpine AS base
 
+# 依存関係のインストール
+FROM base AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# ビルドステージ
+FROM base AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# 本番環境
+FROM base AS runner
 WORKDIR /app
 
-COPY package*.json ./
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm install
+# 非rootユーザーを作成
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-COPY . .
+# 必要なファイルをコピー
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-EXPOSE 5173
+USER nextjs
 
-CMD ["npm", "run", "dev"]
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

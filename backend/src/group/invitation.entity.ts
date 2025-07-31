@@ -1,56 +1,60 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Group } from './group.entity';
 import { User } from '../user/user.entity';
-import { GroupMemberRole } from './group-member.entity';
+import { GroupMemberRole } from './types';
 
 @Entity()
 export class Invitation {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  token: string;
+  token!: string;
 
   @Column()
-  email: string;
+  email!: string;
 
   @Column({ nullable: true })
-  invitedUserId: string | null;
+  invitedUserId!: string | null;
 
   @Column({
     type: 'enum',
     enum: GroupMemberRole,
     default: GroupMemberRole.MEMBER,
   })
-  role: GroupMemberRole;
+  role!: GroupMemberRole;
 
   @Column({ type: 'timestamp' })
-  expiresAt: Date;
+  expiresAt!: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  acceptedAt: Date;
+  acceptedAt!: Date;
 
   @Column({ default: false })
-  isAccepted: boolean;
+  isAccepted!: boolean;
 
   @ManyToOne(() => Group)
-  group: Group;
+  group!: Group;
 
   @Column()
-  groupId: string;
+  groupId!: string;
 
   @ManyToOne(() => User, { nullable: true })
-  invitedUser: User;
+  invitedUser!: User;
 
   @ManyToOne(() => User)
-  invitedBy: User;
+  invitedBy!: User;
 
   @Column()
-  invitedById: string;
+  invitedById!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
-} 
+  updatedAt!: Date;
+
+  isExpired(): boolean {
+    return this.expiresAt < new Date();
+  }
+}

@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { X, Plus, Loader2 } from 'lucide-react'
+import { X, Plus, Loader2, AlertCircle } from 'lucide-react'
 
 interface MemoCreateDialogProps {
   open: boolean
@@ -38,6 +38,7 @@ export function MemoCreateDialog({
   const [currentTag, setCurrentTag] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleAddTag = () => {
     if (currentTag.trim() && !tags.includes(currentTag.trim())) {
@@ -59,11 +60,13 @@ export function MemoCreateDialog({
 
   const handleCreate = async () => {
     if (!title.trim() || !content.trim()) {
-      alert('タイトルと内容を入力してください')
+      setError('タイトルと内容を入力してください')
       return
     }
 
     setLoading(true)
+    setError(null)
+    
     try {
       await onCreateMemo({
         title: title.trim(),
@@ -79,9 +82,9 @@ export function MemoCreateDialog({
       setCurrentTag('')
       setIsPrivate(false)
       onOpenChange(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('メモ作成エラー:', error)
-      alert('メモの作成に失敗しました')
+      setError(error.message || 'メモの作成に失敗しました')
     } finally {
       setLoading(false)
     }
@@ -93,6 +96,7 @@ export function MemoCreateDialog({
     setTags([])
     setCurrentTag('')
     setIsPrivate(false)
+    setError(null)
     onOpenChange(false)
   }
 
@@ -107,6 +111,14 @@ export function MemoCreateDialog({
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* エラーメッセージ */}
+          {error && (
+            <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           {/* タイトル */}
           <div className="space-y-2">
             <Label htmlFor="memo-title">タイトル *</Label>

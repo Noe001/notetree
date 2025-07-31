@@ -14,13 +14,19 @@ interface CreateGroupDialogProps {
   loading?: boolean;
 }
 
+interface FormData {
+  name: string;
+  description: string;
+  isPrivate: boolean;
+}
+
 export function CreateGroupDialog({ 
   open, 
   onOpenChange, 
   onCreateGroup,
   loading = false 
 }: CreateGroupDialogProps) {
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState<FormData>({ name: '', description: '', isPrivate: false });
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,8 +39,9 @@ export function CreateGroupDialog({
 
     try {
       setError(null);
-      await onCreateGroup(formData);
-      setFormData({ name: '', description: '' });
+      const { isPrivate, ...groupData } = formData;
+      await onCreateGroup(groupData);
+      setFormData({ name: '', description: '', isPrivate: false });
       onOpenChange(false);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'グループの作成に失敗しました');
@@ -42,7 +49,7 @@ export function CreateGroupDialog({
   };
 
   const handleCancel = () => {
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', isPrivate: false });
     setError(null);
     onOpenChange(false);
   };
@@ -84,6 +91,18 @@ export function CreateGroupDialog({
             />
           </div>
 
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="isPrivate"
+              checked={formData.isPrivate}
+              onChange={(e) => setFormData(prev => ({ ...prev, isPrivate: e.target.checked }))}
+              disabled={loading}
+              className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+            />
+            <Label htmlFor="isPrivate">プライベートグループ</Label>
+          </div>
+
           {error && (
             <Alert>
               <AlertDescription>{error}</AlertDescription>
@@ -102,4 +121,4 @@ export function CreateGroupDialog({
       </DialogContent>
     </Dialog>
   );
-} 
+}

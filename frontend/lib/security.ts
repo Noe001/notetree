@@ -81,88 +81,280 @@ export const validators = {
       return { valid: false, error: 'ファイル名に使用できない文字が含まれています' }
     }
     return { valid: true }
-  }
-}
+  },
 
-// レート制限のためのクラス
-export class RateLimiter {
-  private requests: Map<string, number[]> = new Map()
-  private maxRequests: number
-  private windowMs: number
-
-  constructor(maxRequests: number = 10, windowMs: number = 60000) {
-    this.maxRequests = maxRequests
-    this.windowMs = windowMs
-  }
-
-  isAllowed(identifier: string): boolean {
-    const now = Date.now()
-    const windowStart = now - this.windowMs
-
-    // 既存のリクエスト記録を取得
-    let requestTimes = this.requests.get(identifier) || []
-
-    // 時間窓外のリクエストを削除
-    requestTimes = requestTimes.filter(time => time > windowStart)
-
-    // 制限を超えているかチェック
-    if (requestTimes.length >= this.maxRequests) {
-      return false
+  // パスワード強度チェック
+  password: (password: string): { valid: boolean; error?: string } => {
+    if (!password.trim()) {
+      return { valid: false, error: 'パスワードは必須です' }
     }
+    if (password.length < 8) {
+      return { valid: false, error: 'パスワードは8文字以上で入力してください' }
+    }
+    if (password.length > 128) {
+      return { valid: false, error: 'パスワードが長すぎます' }
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return { valid: false, error: 'パスワードに小文字を含めてください' }
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return { valid: false, error: 'パスワードに大文字を含めてください' }
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return { valid: false, error: 'パスワードに数字を含めてください' }
+    }
+    // 特殊文字のチェック（オプション）
+    if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) {
+      return { valid: false, error: 'パスワードに特殊文字を含めてください' }
+    }
+    // 連続文字のチェック
+    if (/(.)\1{2,}/.test(password)) {
+      return { valid: false, error: '同じ文字が3回以上連続するパスワードは使用できません' }
+    }
+    // 一般的なパスワードのチェック
+    const commonPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein']
+    if (commonPasswords.includes(password.toLowerCase())) {
+      return { valid: false, error: '一般的すぎるパスワードは使用できません' }
+    }
+    return { valid: true }
+  },
 
-    // 新しいリクエストを記録
-    requestTimes.push(now)
-    this.requests.set(identifier, requestTimes)
-
-    return true
-  }
-
-  getRemainingRequests(identifier: string): number {
-    const now = Date.now()
-    const windowStart = now - this.windowMs
-    const requestTimes = this.requests.get(identifier) || []
-    const validRequests = requestTimes.filter(time => time > windowStart)
-    
-    return Math.max(0, this.maxRequests - validRequests.length)
-  }
-
-  getResetTime(identifier: string): number {
-    const requestTimes = this.requests.get(identifier) || []
-    if (requestTimes.length === 0) return 0
-    
-    const oldestRequest = Math.min(...requestTimes)
-    return oldestRequest + this.windowMs
+  // ユーザー名検証
+  username: (username: string): { valid: boolean; error?: string } => {
+    if (!username.trim()) {
+      return { valid: false, error: 'ユーザー名は必須です' }
+    }
+    if (username.length < 2) {
+      return { valid: false, error: 'ユーザー名は2文字以上で入力してください' }
+    }
+    if (username.length > 50) {
+      return { valid: false, error: 'ユーザー名は50文字以内で入力してください' }
+    }
+    if (!/^[a-zA-Z0-9ぁ-んァ-ヶー一-龯\-_]+$/.test(username)) {
+      return { valid: false, error: 'ユーザー名に使用できない文字が含まれています' }
+    }
+    // 連続アンダースコアのチェック
+    if (/_{3,}/.test(username)) {
+      return { valid: false, error: 'アンダースコアが3回以上連続するユーザー名は使用できません' }
+    }
+    return { valid: true }
   }
 }
 
-// CSRF対策用のトークン生成
+/**
+ * 本番環境でのセキュリティ強化ユーティリティ
+ */
+
+/**
+ * 入力値のサニタイゼーション
+ */
+export function sanitizeInput(input: string): string {
+  if (typeof input !== 'string') {
+    return '';
+  }
+  
+  // HTMLエンティティのエスケープ
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
+/**
+ * XSS攻撃の検出
+ */
+export function detectXSS(input: string): boolean {
+  const xssPatterns = [
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    /javascript:/gi,
+    /on\w+\s*=/gi,
+    /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
+    /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
+    /<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi
+  ];
+  
+  return xssPatterns.some(pattern => pattern.test(input));
+}
+
+/**
+ * SQLインジェクション攻撃の検出
+ */
+export function detectSQLInjection(input: string): boolean {
+  const sqlPatterns = [
+    /(\b(union|select|insert|update|delete|drop|create|alter)\b)/gi,
+    /(\b(or|and)\b\s+\d+\s*[=<>])/gi,
+    /(--|\/\*|\*\/)/g,
+    /(\b(exec|execute|xp_|sp_)\b)/gi
+  ];
+  
+  return sqlPatterns.some(pattern => pattern.test(input));
+}
+
+/**
+ * セッショントークンの検証
+ */
+export function validateSessionToken(token: string): boolean {
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+  
+  // JWTトークンの形式チェック
+  const jwtPattern = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/;
+  return jwtPattern.test(token);
+}
+
+/**
+ * パスワード強度の検証
+ */
+export function validatePasswordStrength(password: string): {
+  isValid: boolean;
+  score: number;
+  feedback: string[];
+} {
+  const feedback: string[] = [];
+  let score = 0;
+  
+  if (!password || password.length < 8) {
+    feedback.push('パスワードは8文字以上である必要があります');
+    return { isValid: false, score: 0, feedback };
+  }
+  
+  // 長さチェック
+  if (password.length >= 12) score += 2;
+  else if (password.length >= 8) score += 1;
+  
+  // 文字種チェック
+  if (/[a-z]/.test(password)) score += 1;
+  if (/[A-Z]/.test(password)) score += 1;
+  if (/[0-9]/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  
+  // フィードバック生成
+  if (!/[a-z]/.test(password)) feedback.push('小文字を含めてください');
+  if (!/[A-Z]/.test(password)) feedback.push('大文字を含めてください');
+  if (!/[0-9]/.test(password)) feedback.push('数字を含めてください');
+  if (!/[^A-Za-z0-9]/.test(password)) feedback.push('特殊文字を含めてください');
+  
+  const isValid = score >= 4;
+  
+  return { isValid, score, feedback };
+}
+
+/**
+ * CSRFトークンの生成
+ */
 export function generateCSRFToken(): string {
-  if (typeof window !== 'undefined' && window.crypto) {
-    const array = new Uint8Array(32)
-    window.crypto.getRandomValues(array)
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
-  }
-  
-  // フォールバック（Node.js環境など）
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15)
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
-// セキュアなランダム文字列生成
-export function generateSecureId(length: number = 16): string {
-  if (typeof window !== 'undefined' && window.crypto) {
-    const array = new Uint8Array(length)
-    window.crypto.getRandomValues(array)
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+/**
+ * CSRFトークンの検証
+ */
+export function validateCSRFToken(token: string, storedToken: string): boolean {
+  return token === storedToken;
+}
+
+/**
+ * レート制限の実装
+ */
+class RateLimiter {
+  private requests = new Map<string, { count: number; resetTime: number }>();
+  
+  constructor(
+    private maxRequests: number = 100,
+    private windowMs: number = 60000 // 1分
+  ) {}
+  
+  isAllowed(identifier: string): boolean {
+    const now = Date.now();
+    const requestData = this.requests.get(identifier);
+    
+    if (!requestData || now > requestData.resetTime) {
+      // 新しいウィンドウを開始
+      this.requests.set(identifier, {
+        count: 1,
+        resetTime: now + this.windowMs
+      });
+      return true;
+    }
+    
+    if (requestData.count >= this.maxRequests) {
+      return false;
+    }
+    
+    requestData.count++;
+    return true;
   }
   
-  // フォールバック
-  let result = ''
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length))
+  getRemainingRequests(identifier: string): number {
+    const requestData = this.requests.get(identifier);
+    if (!requestData) return this.maxRequests;
+    
+    const now = Date.now();
+    if (now > requestData.resetTime) return this.maxRequests;
+    
+    return Math.max(0, this.maxRequests - requestData.count);
   }
-  return result
+}
+
+export const rateLimiter = new RateLimiter();
+
+/**
+ * セキュアなランダム文字列の生成
+ */
+export function generateSecureRandomString(length: number = 32): string {
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').substring(0, length);
+}
+
+/**
+ * ファイルアップロードの検証
+ */
+export function validateFileUpload(file: File): {
+  isValid: boolean;
+  error?: string;
+} {
+  // ファイルサイズの制限（10MB）
+  const maxSize = 10 * 1024 * 1024;
+  if (file.size > maxSize) {
+    return { isValid: false, error: 'ファイルサイズが大きすぎます（最大10MB）' };
+  }
+  
+  // 許可されたファイル形式
+  const allowedTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'text/plain',
+    'application/pdf'
+  ];
+  
+  if (!allowedTypes.includes(file.type)) {
+    return { isValid: false, error: '許可されていないファイル形式です' };
+  }
+  
+  return { isValid: true };
+}
+
+/**
+ * 本番環境でのセキュリティヘッダーの設定
+ */
+export function getSecurityHeaders(): Record<string, string> {
+  return {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), fullscreen=self',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload'
+  };
 }
 
 // URL検証
@@ -195,12 +387,11 @@ export function validateURL(url: string): { valid: boolean; error?: string } {
 // コンテンツセキュリティポリシー設定
 export const CSP_POLICY = {
   'default-src': ["'self'"],
-  'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://accounts.google.com'],
-  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-  'font-src': ["'self'", 'https://fonts.gstatic.com'],
+  'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'font-src': ["'self'"],
   'img-src': ["'self'", 'data:', 'https:'],
   'connect-src': ["'self'", 'https://api.supabase.com', 'wss://realtime.supabase.com'],
-  'frame-src': ['https://accounts.google.com'],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],

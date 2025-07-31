@@ -1,33 +1,36 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-// import { GroupMember } from '../group/group-member.entity';
+import { GroupMember } from '../group/group-member.entity';
 import { Memo } from '../memo/memo.entity';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column({ unique: true })
-  username: string;
+  username!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
+
+  @Column()
+  password!: string;
 
   @Column({ nullable: true })
-  profileImageUrl: string;
+  profileImageUrl!: string;
 
-  // @OneToMany(() => GroupMember, (groupMember) => groupMember.user)
-  // groupMemberships: GroupMember[];
+  @OneToMany(() => GroupMember, (groupMember) => groupMember.user)
+  groupMemberships!: GroupMember[];
 
   @OneToMany(() => Memo, (memo) => memo.user)
-  memos: Memo[];
+  memos!: Memo[];
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt!: Date;
 }

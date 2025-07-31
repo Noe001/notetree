@@ -23,7 +23,7 @@ export interface GroupMember {
   id: string
   userId: string
   groupId: string
-  role: 'owner' | 'admin' | 'editor' | 'viewer'
+  role: 'owner' | 'admin' | 'member'
   joinedAt: string
   user: {
     id: string
@@ -47,41 +47,76 @@ export interface UpdateGroupDto {
 
 export interface InviteMemberDto {
   email: string
-  role: 'admin' | 'editor' | 'viewer'
+  role: 'admin' | 'member'
 }
 
 class GroupApiClient {
+  private baseUrl: string;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
+
   private async request<T>(
     endpoint: string, 
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const url = `${this.baseUrl}${endpoint}`;
+    
+    // Get session from localStorage for authentication
+    let authHeader = '';
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        ...options,
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.message || `HTTP ${response.status}`
+      const savedSession = localStorage.getItem('notetree_session');
+      if (savedSession) {
+        const sessionData = JSON.parse(savedSession);
+        // セッションの有効性をチェック
+        const now = Date.now();
+        const expiresAt = sessionData.expires_in * 1000;
+        const sessionStart = sessionData.user.created_at ? new Date(sessionData.user.created_at).getTime() : now;
+        
+        if ((sessionStart + expiresAt) > now) {
+          authHeader = `Bearer ${sessionData.access_token}`;
+        } else {
+          // セッションが期限切れの場合はクリア
+          localStorage.removeItem('notetree_session');
+          localStorage.removeItem('notetree_user');
         }
       }
-
-      return {
-        success: true,
-        data
-      }
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+      console.warn('Failed to get authentication token:', error);
+      // エラーが発生した場合は認証情報をクリア
+      localStorage.removeItem('notetree_session');
+      localStorage.removeItem('notetree_user');
+    }
+    
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authHeader && { 'Authorization': authHeader }),
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        // 認証エラーの場合はセッションをクリア
+        if (response.status === 401) {
+          localStorage.removeItem('notetree_session');
+          localStorage.removeItem('notetree_user');
+        }
+        
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`API request failed: ${url}`, error);
+      throw error;
     }
   }
 
@@ -142,7 +177,7 @@ class GroupApiClient {
   async updateMemberRole(
     groupId: string, 
     userId: string, 
-    role: 'admin' | 'editor' | 'viewer'
+    role: 'admin' | 'member'
   ): Promise<ApiResponse<GroupMember>> {
     return this.request<GroupMember>(`/groups/${groupId}/members/${userId}`, {
       method: 'PATCH',
@@ -152,17 +187,23 @@ class GroupApiClient {
 
   // 招待受諾
   async acceptInvitation(token: string): Promise<ApiResponse<Group>> {
-    return this.request<Group>('/groups/join', {
-      method: 'POST',
-      body: JSON.stringify({ token })
-    })
+    return this.request<Group>(`/invitations/accept?token=${token}`, {
+      method: 'GET'
+    });
   }
 
   // 招待拒否
   async rejectInvitation(token: string): Promise<ApiResponse<void>> {
-    return this.request<void>('/groups/reject', {
+    return this.request<void>(`/invitations/reject?token=${token}`, {
+      method: 'POST'
+    })
+  }
+
+  // グループ参加
+  async joinGroup(groupId: string, invitationToken?: string): Promise<ApiResponse<GroupMember>> {
+    return this.request<GroupMember>(`/groups/${groupId}/join`, {
       method: 'POST',
-      body: JSON.stringify({ token })
+      body: JSON.stringify({ invitationToken })
     })
   }
 
@@ -174,7 +215,7 @@ class GroupApiClient {
   }
 }
 
-export const groupApiClient = new GroupApiClient()
+export const groupApiClient = new GroupApiClient('http://localhost:3001');
 
 // React Hook for Group Management
 export function useGroupApi() {
@@ -217,16 +258,17 @@ export function useGroupApi() {
     getGroupMembers: (groupId: string) => withAuth(() => groupApiClient.getGroupMembers(groupId)),
     inviteMember: (groupId: string, data: InviteMemberDto) => withAuth(() => groupApiClient.inviteMember(groupId, data)),
     removeMember: (groupId: string, userId: string) => withAuth(() => groupApiClient.removeMember(groupId, userId)),
-    updateMemberRole: (groupId: string, userId: string, role: 'admin' | 'editor' | 'viewer') => 
+    updateMemberRole: (groupId: string, userId: string, role: 'admin' | 'member') => 
       withAuth(() => groupApiClient.updateMemberRole(groupId, userId, role)),
 
     // 招待・参加操作
     acceptInvitation: (token: string) => withAuth(() => groupApiClient.acceptInvitation(token)),
     rejectInvitation: (token: string) => withAuth(() => groupApiClient.rejectInvitation(token)),
+    joinGroup: (groupId: string, invitationToken?: string) => withAuth(() => groupApiClient.joinGroup(groupId, invitationToken)),
     leaveGroup: (groupId: string) => withAuth(() => groupApiClient.leaveGroup(groupId)),
 
     // ユーザー情報
     currentUser: user,
     isAuthenticated: !!user
   }
-} 
+}

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Re
 import { MemoService } from './memo.service';
 import { CreateMemoDto } from './dto/create-memo.dto';
 import { UpdateMemoDto } from './dto/update-memo.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('memos')
 export class MemoController {
@@ -10,17 +11,21 @@ export class MemoController {
   constructor(private readonly memoService: MemoService) {}
 
   @Post()
-  async create(@Body() createMemoDto: CreateMemoDto, @Request() req) {
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createMemoDto: CreateMemoDto, @Request() req: any) {
     try {
       this.logger.log('POST /memos called');
-      const userId = req.user?.id || 'dc9282c0-707f-4030-888d-cb1d414108f7'; // 暫定的なユーザーID
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      }
       const memo = await this.memoService.create(createMemoDto, userId);
       return {
         success: true,
         data: memo,
         message: 'Memo created successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error creating memo: ${error.message}`);
       throw new HttpException(
         {
@@ -43,7 +48,7 @@ export class MemoController {
         data: memos,
         count: memos.length
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error fetching memos: ${error.message}`);
       throw new HttpException(
         {
@@ -69,7 +74,7 @@ export class MemoController {
         data: memos,
         count: memos.length
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error searching memos: ${error.message}`);
       throw new HttpException(
         {
@@ -83,7 +88,7 @@ export class MemoController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req) {
+  async findOne(@Param('id') id: string, @Request() req: any) {
     try {
       this.logger.log(`GET /memos/${id} called`);
       const userId = req.user?.id;
@@ -92,7 +97,7 @@ export class MemoController {
         success: true,
         data: memo
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error fetching memo ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -106,17 +111,21 @@ export class MemoController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateMemoDto: UpdateMemoDto, @Request() req) {
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('id') id: string, @Body() updateMemoDto: UpdateMemoDto, @Request() req: any) {
     try {
       this.logger.log(`PATCH /memos/${id} called`);
-      const userId = req.user?.id || 'dc9282c0-707f-4030-888d-cb1d414108f7'; // 暫定的なユーザーID
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      }
       const memo = await this.memoService.update(id, updateMemoDto, userId);
       return {
         success: true,
         data: memo,
         message: 'Memo updated successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error updating memo ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -130,16 +139,19 @@ export class MemoController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @Request() req) {
+  async remove(@Param('id') id: string, @Request() req: any) {
     try {
       this.logger.log(`DELETE /memos/${id} called`);
-      const userId = req.user?.id || 'dc9282c0-707f-4030-888d-cb1d414108f7'; // 暫定的なユーザーID
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      }
       await this.memoService.remove(id, userId);
       return {
         success: true,
         message: 'Memo deleted successfully'
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error deleting memo ${id}: ${error.message}`);
       throw new HttpException(
         {
@@ -151,4 +163,4 @@ export class MemoController {
       );
     }
   }
-} 
+}

@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import {
   Users, User, Plus, Settings, HelpCircle, LogOut, Search, ArrowUpDown, FilePenLine, Lock, Menu, X, Palette, Keyboard, Check, Trash2, Share2
 } from "lucide-react";
+import Link from 'next/link';
 
 // shadcn/uiコンポーネントのインポート
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +22,7 @@ import { useAuth } from "@/lib/auth-context";
 import { UserProfileDialog } from "@/components/auth/user-profile-dialog";
 
 // ダイアログコンポーネントのインポート
+import { MemoCreateDialog } from "@/components/memo/memo-create-dialog";
 import { MemoEditDialog } from "@/components/memo/memo-edit-dialog";
 import { MemoDeleteDialog } from "@/components/memo/memo-delete-dialog";
 import { GroupSettingsDialog } from "@/components/group/group-settings-dialog";
@@ -29,6 +31,7 @@ import { SearchResultsDialog } from "@/components/search/search-results-dialog";
 import { ExportImportDialog } from "@/components/data/export-import-dialog";
 import { KeyboardShortcutsDialog } from "@/components/help/keyboard-shortcuts-dialog";
 import { CreateGroupDialog } from "@/components/group/create-group-dialog";
+import { JoinGroupDialog } from "@/components/group/join-group-dialog";
 
 // リアルタイム関連のインポート（一時的に無効化）
 // import { useMemoRealtime } from "@/hooks/useRealtime";
@@ -38,6 +41,7 @@ import { CreateGroupDialog } from "@/components/group/create-group-dialog";
 
 // APIクライアントのインポート
 import { apiClient, Memo as ApiMemo, CreateMemoDto, UpdateMemoDto } from "@/lib/api";
+import { useGroups } from "@/hooks/useApi";
 
 // --- 型定義 ---
 type Memo = {
@@ -48,6 +52,7 @@ type Memo = {
   updatedAt: string;
   createdAt: string;
   isPrivate: boolean;
+  groupId?: string | null;
 };
 
 // 現在のユーザーID（実際のアプリでは認証から取得）
@@ -63,7 +68,11 @@ const SidebarContent = ({
   onOpenSearchResults,
   onOpenExportImport,
   onOpenKeyboardShortcuts,
-  onOpenCreateGroup
+  onOpenCreateGroup,
+  onOpenJoinGroup,
+  groups,
+  selectedGroupId,
+  onGroupSelect
 }: { 
   onOpenSettings: () => void; 
   onOpenProfile: () => void;
@@ -72,6 +81,10 @@ const SidebarContent = ({
   onOpenExportImport: () => void;
   onOpenKeyboardShortcuts: () => void;
   onOpenCreateGroup: () => void;
+  onOpenJoinGroup: () => void;
+  groups: any[];
+  selectedGroupId?: string;
+  onGroupSelect: (groupId: string | undefined) => void;
 }) => {
   const { user } = useAuth();
   
@@ -86,25 +99,53 @@ const SidebarContent = ({
             className="flex items-center p-2 hover:bg-muted rounded-lg transition-colors"
           >
             <Avatar className="mr-3">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name || user?.email || 'ユーザー'} />
-                  <AvatarFallback>{user?.user_metadata?.name?.[0] || user?.email?.[0] || 'U'}</AvatarFallback>
+                  <AvatarImage src="" alt={user?.name || user?.email || 'ユーザー'} />
+                  <AvatarFallback>{user?.name?.[0] || user?.email?.[0] || 'U'}</AvatarFallback>
             </Avatar>
               <div className="text-left">
-                  <p className="font-semibold text-sm">{user?.user_metadata?.name || 'ユーザー'}</p>
+                  <p className="font-semibold text-sm">{user?.name || 'ユーザー'}</p>
                   <p className="text-xs text-muted-foreground">{user?.email}</p>
           </div>
           </button>
         <Separator/>
         <div>
-            <h3 className="text-xs font-semibold text-muted-foreground my-2 px-2 flex items-center"><Users className="w-4 h-4 mr-2" />グループ</h3>
-            <Button variant="secondary" className="w-full mb-2 justify-start">
+            <Button 
+              variant={selectedGroupId ? "ghost" : "secondary"} 
+              className="w-full mb-2 justify-start"
+              onClick={() => onGroupSelect(undefined)}
+            >
                 <User className="h-5 w-5" />
                 <span className="ml-4">個人メモ</span>
-                <Check className="w-4 h-4 ml-auto" />
+                {!selectedGroupId && <Check className="w-4 h-4 ml-auto" />}
             </Button>
-            <Button variant="ghost" className="w-full text-muted-foreground justify-start" onClick={onOpenCreateGroup}>
+            <h3 className="text-xs font-semibold text-muted-foreground my-2 px-2 flex items-center"><Users className="w-4 h-4 mr-2" />グループ</h3>
+            {groups.map((group) => (
+              <Button
+                key={group.id}
+                variant={selectedGroupId === group.id ? "secondary" : "ghost"}
+                className="w-full mb-1 justify-start"
+                onClick={() => onGroupSelect(group.id)}
+              >
+                <Users className="h-5 w-5" />
+                <span className="ml-4 truncate">{group.name}</span>
+                {selectedGroupId === group.id && <Check className="w-4 h-4 ml-auto" />}
+              </Button>
+            ))}
+            <Button 
+              variant="ghost" 
+              className="w-full text-muted-foreground justify-start mt-2"
+              onClick={onOpenCreateGroup}
+            >
                 <Plus className="h-5 w-5" />
                 <span className="ml-4">新しいグループ</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="w-full text-muted-foreground justify-start"
+              onClick={onOpenJoinGroup}
+            >
+                <Users className="h-5 w-5" />
+                <span className="ml-4">グループに参加</span>
             </Button>
         </div>
         <Separator />
@@ -175,12 +216,24 @@ type MemoListPanelProps = {
   activeTags: string[];
   onCreateMemo: () => void;
   allTags: string[];
+  selectedGroupId?: string;
+  groups: any[];
 };
 
-const MemoListPanel = ({ memos, selectedMemo, onSelectMemo, onSearch, onSort, onTagToggle, activeTags, onCreateMemo, allTags }: MemoListPanelProps) => (
+const MemoListPanel = ({ memos, selectedMemo, onSelectMemo, onSearch, onSort, onTagToggle, activeTags, onCreateMemo, allTags, selectedGroupId, groups }: MemoListPanelProps) => {
+  // ヘッダーのタイトルを動的に決定
+  const headerTitle = useMemo(() => {
+    if (selectedGroupId) {
+      const selectedGroup = groups?.find((group: any) => group.id === selectedGroupId);
+      return selectedGroup ? selectedGroup.name : 'グループ';
+    }
+    return '個人メモ';
+  }, [selectedGroupId, groups]);
+
+  return (
   <aside className="w-full md:w-80 border-r flex flex-col bg-background h-full">
     <div className="p-2 border-b flex items-center justify-between h-14">
-        <h2 className="text-lg font-semibold px-2">メモ</h2>
+        <h2 className="text-lg font-semibold px-2">{headerTitle}</h2>
         <Button variant="ghost" size="icon" aria-label="新しいメモを作成" title="新しいメモを作成" onClick={onCreateMemo}>
             <FilePenLine className="w-5 h-5" />
           </Button>
@@ -239,7 +292,8 @@ const MemoListPanel = ({ memos, selectedMemo, onSelectMemo, onSearch, onSort, on
       )}
     </div>
   </aside>
-);
+  );
+};
 
 // =================================================================
 // コンポーネント 4: メモエディタ
@@ -380,27 +434,34 @@ const PrivacyToggleButton = ({ isPrivate, onClick }: { isPrivate: boolean; onCli
 // メインのAppコンポーネント (全体の司令塔)
 // =================================================================
 export default function App() {
+  const { user } = useAuth();
   const [memos, setMemos] = useState<Memo[]>([]);
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState<keyof Memo>('updatedAt');
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
+  const [groups, setGroups] = useState<any[]>([]);
+  
+  // ダイアログの状態管理
+  const [createMemoDialogOpen, setCreateMemoDialogOpen] = useState(false);
+  const [editMemoDialogOpen, setEditMemoDialogOpen] = useState(false);
+  const [deleteMemoDialogOpen, setDeleteMemoDialogOpen] = useState(false);
+  const [memoToEdit, setMemoToEdit] = useState<Memo | null>(null);
+  const [memoToDelete, setMemoToDelete] = useState<Memo | null>(null);
+  
+  // その他の状態管理
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isSettingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [allTags, setAllTags] = useState<string[]>([]);
-
-  // メモダイアログの状態
-  const [isMemoEditDialogOpen, setMemoEditDialogOpen] = useState(false);
-  const [isMemoDeleteDialogOpen, setMemoDeleteDialogOpen] = useState(false);
-  const [editingMemo, setEditingMemo] = useState<Memo | null>(null);
-  const [deletingMemo, setDeletingMemo] = useState<Memo | null>(null);
 
   // グループダイアログの状態
   const [isGroupSettingsDialogOpen, setGroupSettingsDialogOpen] = useState(false);
   const [isMemberManagementDialogOpen, setMemberManagementDialogOpen] = useState(false);
   const [isCreateGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
+  const [isJoinGroupDialogOpen, setJoinGroupDialogOpen] = useState(false);
   const [isSearchResultsDialogOpen, setSearchResultsDialogOpen] = useState(false);
   const [isExportImportDialogOpen, setExportImportDialogOpen] = useState(false);
   const [isKeyboardShortcutsDialogOpen, setKeyboardShortcutsDialogOpen] = useState(false);
@@ -431,7 +492,7 @@ export default function App() {
   const fetchMemos = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.getMemos(CURRENT_USER_ID);
+      const response = await apiClient.getMemos(CURRENT_USER_ID, selectedGroupId);
       if (response.success && response.data) {
         const convertedMemos: Memo[] = response.data.map(apiMemo => ({
           id: apiMemo.id,
@@ -441,6 +502,7 @@ export default function App() {
           updatedAt: apiMemo.updatedAt,
           createdAt: apiMemo.createdAt,
           isPrivate: apiMemo.isPrivate,
+          groupId: apiMemo.groupId || null,
         }));
         setMemos(convertedMemos);
         
@@ -459,14 +521,15 @@ export default function App() {
     }
   };
 
-  // 新しいメモを作成（既存の空メモ作成）
-  const createMemo = async () => {
+  // 新しいメモを作成（ダイアログを使用）
+  const createMemo = async (memoData: { title: string; content: string; tags: string[]; isPrivate: boolean }) => {
     try {
       const newMemoData: CreateMemoDto = {
-        title: '',
-        content: '',
-        tags: [],
-        isPrivate: true,
+        title: memoData.title,
+        content: memoData.content,
+        tags: memoData.tags,
+        isPrivate: memoData.isPrivate,
+        groupId: selectedGroupId || null,
       };
       
       const response = await apiClient.createMemo(newMemoData);
@@ -479,6 +542,7 @@ export default function App() {
           updatedAt: response.data.updatedAt,
           createdAt: response.data.createdAt,
           isPrivate: response.data.isPrivate,
+          groupId: response.data.groupId || null,
         };
         
         const newMemos = [newMemo, ...memos];
@@ -487,13 +551,14 @@ export default function App() {
         
         // タグリストを更新
         updateAllTags(newMemos);
+      } else {
+        throw new Error(response.error || 'メモの作成に失敗しました');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create memo:', error);
+      throw new Error(error.message || 'メモの作成に失敗しました');
     }
   };
-
-
 
   // メモを更新
   const updateMemo = async (id: string, updates: UpdateMemoDto) => {
@@ -508,6 +573,7 @@ export default function App() {
           updatedAt: response.data.updatedAt,
           createdAt: response.data.createdAt,
           isPrivate: response.data.isPrivate,
+          groupId: response.data.groupId || null, // グループIDも含める
         };
         
         const newMemos = memos.map(memo => memo.id === id ? updatedMemo : memo);
@@ -518,9 +584,12 @@ export default function App() {
 
         // 使用されているタグのみを更新
         updateAllTags(newMemos);
+      } else {
+        throw new Error(response.error || 'メモの更新に失敗しました');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update memo:', error);
+      throw new Error(error.message || 'メモの更新に失敗しました');
     }
   };
 
@@ -538,9 +607,12 @@ export default function App() {
 
         // タグリストを更新（使用されていないタグを削除）
         updateAllTags(newMemos);
+      } else {
+        throw new Error(response.error || 'メモの削除に失敗しました');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete memo:', error);
+      throw new Error(error.message || 'メモの削除に失敗しました');
     }
   };
 
@@ -548,6 +620,11 @@ export default function App() {
   useEffect(() => {
     fetchMemos();
   }, []);
+
+  // グループ選択時にメモを再取得
+  useEffect(() => {
+    fetchMemos();
+  }, [selectedGroupId]);
 
   const handleTagToggle = (tag: string) => {
     setActiveTags(prev =>
@@ -576,18 +653,17 @@ export default function App() {
 
   // メモダイアログハンドラー
   const handleOpenMemoCreate = () => {
-    // ダイアログを表示せずに直接メモを作成
-    createMemo();
+    setCreateMemoDialogOpen(true);
   };
 
   const handleOpenMemoEdit = (memo: Memo) => {
-    setEditingMemo(memo);
-    setMemoEditDialogOpen(true);
+    setMemoToEdit(memo);
+    setEditMemoDialogOpen(true);
   };
 
   const handleOpenMemoDelete = (memo: Memo) => {
-    setDeletingMemo(memo);
-    setMemoDeleteDialogOpen(true);
+    setMemoToDelete(memo);
+    setDeleteMemoDialogOpen(true);
   };
 
   // グループダイアログハンドラー
@@ -605,17 +681,51 @@ export default function App() {
     }, 150);
   };
 
+  const handleOpenJoinGroup = () => {
+    setSidebarOpen(false);
+    setTimeout(() => {
+        setJoinGroupDialogOpen(true);
+    }, 150);
+  };
+
   const handleCreateGroup = async (groupData: { name: string; description?: string }) => {
     try {
-      const response = await apiClient.createGroup(groupData);
-      if (response.success) {
-        console.log('Group created successfully:', response.data);
-        // TODO: グループリストを更新
-      } else {
-        throw new Error(response.error || 'グループの作成に失敗しました');
-      }
+      // グループ作成のロジックを実装
+      console.log('Creating group:', groupData);
+      // 実際のAPI呼び出しをここに実装
+      
+      // グループリストを更新
+      setGroups(prevGroups => [...prevGroups, { id: Date.now().toString(), ...groupData }]);
     } catch (error) {
       console.error('Failed to create group:', error);
+      throw error;
+    }
+  };
+
+  const handleJoinByGroupId = async (groupId: string) => {
+    try {
+      // グループ参加のロジックを実装
+      console.log('Joining group by ID:', groupId);
+      // 実際のAPI呼び出しをここに実装
+      
+      // グループリストを更新
+      setGroups(prevGroups => [...prevGroups, { id: groupId, name: `Group ${groupId}` }]);
+    } catch (error) {
+      console.error('Failed to join group:', error);
+      throw error;
+    }
+  };
+
+  const handleJoinByInvitation = async (invitationToken: string) => {
+    try {
+      // 招待トークンでのグループ参加のロジックを実装
+      console.log('Joining group by invitation:', invitationToken);
+      // 実際のAPI呼び出しをここに実装
+      
+      // グループリストを更新
+      setGroups(prevGroups => [...prevGroups, { id: Date.now().toString(), name: 'Invited Group' }]);
+    } catch (error) {
+      console.error('Failed to join group by invitation:', error);
       throw error;
     }
   };
@@ -645,14 +755,21 @@ export default function App() {
   };
 
   const filteredAndSortedMemos = useMemo(() => {
-    let filtered = memos.filter(memo =>
-      memo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      memo.content.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    if (activeTags.length > 0) {
-      filtered = filtered.filter(memo => activeTags.every(tag => memo.tags.includes(tag)));
-    }
+    let filtered = memos.filter(memo => {
+      // 検索クエリでフィルタリング
+      const matchesSearch = memo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           memo.content.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // タグでフィルタリング
+      const matchesTags = activeTags.length === 0 || activeTags.every(tag => memo.tags.includes(tag));
+      
+      // グループでフィルタリング
+      const matchesGroup = selectedGroupId 
+        ? memo.groupId === selectedGroupId 
+        : !memo.groupId || memo.groupId === null;
+      
+      return matchesSearch && matchesTags && matchesGroup;
+    });
 
     return filtered.sort((a, b) => {
       if (sortKey === 'title') {
@@ -663,7 +780,7 @@ export default function App() {
       }
       return 0;
     });
-  }, [memos, searchQuery, sortKey, activeTags]);
+  }, [memos, searchQuery, sortKey, activeTags, selectedGroupId]);
 
   if (loading) {
     return (
@@ -682,16 +799,18 @@ export default function App() {
         {/* メモ一覧は常に表示（デスクトップ） */}
         <div className="flex">
       <MemoListPanel
-                memos={filteredAndSortedMemos}
+        memos={filteredAndSortedMemos}
         selectedMemo={selectedMemo}
-                onSelectMemo={setSelectedMemo}
-                onSearch={setSearchQuery}
-                onSort={setSortKey}
-                onTagToggle={handleTagToggle}
-                activeTags={activeTags}
-                onCreateMemo={handleOpenMemoCreate}
-                allTags={allTags}
-            />
+        onSelectMemo={setSelectedMemo}
+        onSearch={setSearchQuery}
+        onSort={setSortKey}
+        onTagToggle={handleTagToggle}
+        activeTags={activeTags}
+        onCreateMemo={handleOpenMemoCreate}
+        allTags={allTags}
+        selectedGroupId={selectedGroupId}
+        groups={groups || []}
+      />
         </div>
         <MemoEditor memo={selectedMemo} onUpdateMemo={updateMemo} />
       </div>
@@ -755,6 +874,13 @@ export default function App() {
               setTimeout(() => setKeyboardShortcutsDialogOpen(true), 150);
             }}
             onOpenCreateGroup={handleOpenCreateGroup}
+            onOpenJoinGroup={handleOpenJoinGroup}
+            groups={groups || []}
+            selectedGroupId={selectedGroupId}
+            onGroupSelect={(groupId) => {
+              setSelectedGroupId(groupId);
+              setSidebarOpen(false);
+            }}
           />
         </SheetContent>
       </Sheet>
@@ -786,7 +912,11 @@ export default function App() {
         </DialogContent>
       </Dialog>
 
-      <UserProfileDialog open={isProfileDialogOpen} onOpenChange={setProfileDialogOpen} />
+      <UserProfileDialog 
+        open={isProfileDialogOpen} 
+        onOpenChange={setProfileDialogOpen}
+        user={null} // TODO: 実際のユーザー情報を渡す
+      />
 
       {/* グループ作成ダイアログ */}
       <CreateGroupDialog 
@@ -796,25 +926,42 @@ export default function App() {
         loading={false}
       />
 
+      {/* グループ参加ダイアログ */}
+              <JoinGroupDialog
+          trigger={<div style={{ display: 'none' }} />}
+          onSuccess={() => {
+            setJoinGroupDialogOpen(false);
+            // fetchGroups(); // この行は削除
+          }}
+        />
+
       {/* メモ作成ダイアログは削除（直接メモ作成に変更） */}
 
       <MemoEditDialog 
-        open={isMemoEditDialogOpen} 
-        onOpenChange={setMemoEditDialogOpen}
-        memo={editingMemo}
+        open={editMemoDialogOpen} 
+        onOpenChange={setEditMemoDialogOpen}
+        memo={memoToEdit}
         onUpdateMemo={async (id, memoData) => {
           await updateMemo(id, memoData);
-          setEditingMemo(null);
+          setMemoToEdit(null);
         }}
       />
 
       <MemoDeleteDialog 
-        open={isMemoDeleteDialogOpen} 
-        onOpenChange={setMemoDeleteDialogOpen}
-        memo={deletingMemo}
+        open={deleteMemoDialogOpen} 
+        onOpenChange={setDeleteMemoDialogOpen}
+        memo={memoToDelete}
         onDeleteMemo={async (id) => {
           await deleteMemo(id);
-          setDeletingMemo(null);
+          setMemoToDelete(null);
+        }}
+      />
+
+      <MemoCreateDialog
+        open={createMemoDialogOpen}
+        onOpenChange={setCreateMemoDialogOpen}
+        onCreateMemo={async (memoData) => {
+          await createMemo(memoData);
         }}
       />
 
@@ -850,6 +997,7 @@ export default function App() {
       <MemberManagementDialog 
         open={isMemberManagementDialogOpen} 
         onOpenChange={setMemberManagementDialogOpen}
+        groupId={selectedGroupId || ''} // 現在選択されているグループIDを渡す
         members={[]} // TODO: 実際のメンバー情報を渡す
         onInviteMember={async (email, role) => {
           // TODO: メンバー招待API呼び出し
@@ -869,8 +1017,9 @@ export default function App() {
         open={isSearchResultsDialogOpen} 
         onOpenChange={setSearchResultsDialogOpen}
         searchQuery={searchQuery}
-        searchResults={filteredAndSortedMemos}
-        onSelectMemo={setSelectedMemo}
+        results={filteredAndSortedMemos}
+        onSearch={setSearchQuery}
+        onSelectResult={setSelectedMemo}
       />
 
       <ExportImportDialog 
@@ -880,9 +1029,10 @@ export default function App() {
           // TODO: エクスポート機能実装
           console.log('Export in format:', format);
         }}
-        onImport={async (file, format) => {
+        onImport={async (data) => {
           // TODO: インポート機能実装
-          console.log('Import file in format:', format);
+          console.log('Import data:', data);
+          return true; // 成功を示す
         }}
       />
 
