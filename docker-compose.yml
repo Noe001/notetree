@@ -2,6 +2,9 @@ services:
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
     ports:
       - "5173:5173"
     volumes:
@@ -26,6 +29,9 @@ services:
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
     ports:
       - "3000:3000"
       - "9229:9229" # For debugging
@@ -51,6 +57,8 @@ services:
       - ./memos-data.json:/app/memos-data.json
     environment:
       - NODE_ENV=development
+      - JWT_SECRET=thisisareallylongandsecuresecret
+      - SUPABASE_JWT_SECRET=thisisareallylongandsecuresecret
     depends_on:
       db:
         condition: service_healthy
@@ -68,7 +76,7 @@ services:
         condition: service_healthy
 
   db:
-    image: supabase/postgres:14.1.0
+    image: supabase/postgres:15.1.0.117
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -86,7 +94,7 @@ services:
       retries: 5
 
   supabase-kong:
-    image: kong:latest
+    image: kong:3.5
     restart: always
     environment:
       - KONG_DATABASE=off
@@ -109,17 +117,19 @@ services:
         condition: service_healthy
 
   supabase-auth:
-    image: supabase/gotrue:v2.5.3
+    image: supabase/gotrue:v2.132.3
     restart: always
     environment:
       - GOTRUE_API_HOST=0.0.0.0
       - GOTRUE_API_PORT=9999
+      - API_EXTERNAL_URL=http://localhost:5173
 
       - GOTRUE_DB_DRIVER=postgres
       - GOTRUE_DB_DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres?search_path=auth
       - GOTRUE_DB_SCHEMA=auth
       - GOTRUE_JWT_SECRET=thisisareallylongandsecuresecret
       - GOTRUE_SITE_URL=http://localhost:5173
+      - GOTRUE_URI_ALLOW_LIST=http://localhost:5173/**
       - GOTRUE_DB_AUTOMIGRATE=true
       - GOTRUE_DB_MIGRATIONS_PATH=""
 
@@ -134,7 +144,7 @@ services:
       - "9999"
 
   supabase-rest:
-    image: postgrest/postgrest:v9.0.0
+    image: postgrest/postgrest:v12.0.2
     restart: always
     environment:
       - PGRST_DB_URI=postgresql://postgres:postgres@db:5432/postgres
@@ -147,6 +157,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    expose:
+      - "3000"
 
 volumes:
   supabase_db:

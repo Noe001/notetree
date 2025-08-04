@@ -8,6 +8,8 @@ import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { LocalStrategy } from './local.strategy';
 import { LocalAuthGuard } from './local-auth.guard';
+import { SupabaseAuthService } from './supabase-auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Module({
   imports: [
@@ -24,7 +26,7 @@ import { LocalAuthGuard } from './local-auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LocalStrategy, LocalAuthGuard],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, LocalStrategy, LocalAuthGuard, SupabaseAuthService, JwtAuthGuard],
+  exports: [AuthService, SupabaseAuthService, JwtAuthGuard],
 })
 export class AuthModule {}

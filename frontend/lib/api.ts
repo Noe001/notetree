@@ -1,4 +1,5 @@
 import { withPerformanceMonitoring } from './performance';
+import { supabase } from './supabase';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -136,30 +137,17 @@ class ApiClient {
     return withPerformanceMonitoring(async () => {
       const url = `${this.baseUrl}${endpoint}`;
       
-      // セッションからトークンを取得
-      const sessionStr = localStorage.getItem('notetree_session');
+      // Supabaseのセッションからトークンを取得
       let authToken = null;
-      
-      if (sessionStr) {
-        try {
-          const session = JSON.parse(sessionStr);
-          const now = Date.now();
-          const createdAt = new Date(session.created_at).getTime();
-          const expiresIn = session.expires_in * 1000; // 秒をミリ秒に変換
-          
-          if (now - createdAt < expiresIn) {
-            authToken = session.access_token;
-          } else {
-            // セッションが期限切れ
-            console.log('Session expired, clearing localStorage');
-            localStorage.removeItem('notetree_session');
-            localStorage.removeItem('notetree_user');
-          }
-        } catch (error) {
-          console.error('Failed to parse session:', error);
-          localStorage.removeItem('notetree_session');
-          localStorage.removeItem('notetree_user');
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('セッション取得エラー:', error);
+        } else if (data.session) {
+          authToken = data.session.access_token;
         }
+      } catch (error) {
+        console.error('セッション取得エラー:', error);
       }
       
       console.log('Debug - Auth token:', authToken); // デバッグログ
@@ -183,12 +171,6 @@ class ApiClient {
           const errorData = await response.json().catch(() => ({}));
           const errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
           
-          // 401エラーの場合はセッションをクリア
-          if (response.status === 401) {
-            console.log('401 Unauthorized, clearing localStorage');
-            localStorage.removeItem('notetree_session');
-            localStorage.removeItem('notetree_user');
-          }
           
           throw new Error(errorMessage);
         }

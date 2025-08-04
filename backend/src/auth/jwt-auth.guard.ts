@@ -1,9 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from './jwt.service';
+import { SupabaseAuthService } from './supabase-auth.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly supabaseAuthService: SupabaseAuthService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -28,13 +32,29 @@ export class JwtAuthGuard implements CanActivate {
         return false;
       }
 
-      // Verify the JWT token using JwtService
+      // First, try to verify the token as a Supabase JWT
+      try {
+        const supabaseUser = await this.supabaseAuthService.verifySupabaseToken(token);
+        if (supabaseUser) {
+          request.user = {
+            id: supabaseUser.id,
+            email: supabaseUser.email,
+            name: supabaseUser.user_metadata?.name || supabaseUser.email,
+            sub: supabaseUser.id
+          };
+          return true;
+        }
+      } catch (supabaseError) {
+        // If Supabase verification fails, continue to local JWT verification
+      }
+
+      // Verify the JWT token using JwtService (local authentication)
       const decoded = this.jwtService.verify(token);
-      request.user = { 
-        id: decoded.sub || decoded.id, 
+      request.user = {
+        id: decoded.sub || decoded.id,
         email: decoded.email,
         name: decoded.name,
-        sub: decoded.sub 
+        sub: decoded.sub
       };
       return true;
     } catch (error) {

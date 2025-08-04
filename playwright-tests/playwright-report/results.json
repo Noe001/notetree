@@ -1,0 +1,1297 @@
+{
+  "config": {
+    "configFile": "/home/noe/notetree/playwright-tests/playwright.config.ts",
+    "rootDir": "/home/noe/notetree/playwright-tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 6
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "playwright-report/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/noe/notetree/playwright-tests/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/noe/notetree/playwright-tests",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.test\\.ts/"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.54.2",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "auth/login.test.ts",
+      "file": "auth/login.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "ログイン機能",
+          "file": "auth/login.test.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "登録済みユーザーがログインできること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 517,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                          "column": 16,
+                          "line": 6
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:27.471Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                        "column": 16,
+                        "line": 6
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "932ff77a7ef026530189-e92f007a2af64f85770d",
+              "file": "auth/login.test.ts",
+              "line": 9,
+              "column": 7
+            },
+            {
+              "title": "メールアドレスが未入力の場合、エラーメッセージが表示されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 238,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                          "column": 16,
+                          "line": 6
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:29.781Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                        "column": 16,
+                        "line": 6
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "932ff77a7ef026530189-733139a1ec2b87df8e57",
+              "file": "auth/login.test.ts",
+              "line": 32,
+              "column": 7
+            },
+            {
+              "title": "パスワードが未入力の場合、エラーメッセージが表示されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 177,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                          "column": 16,
+                          "line": 6
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:30.913Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                        "column": 16,
+                        "line": 6
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "932ff77a7ef026530189-b7580074895b00e54745",
+              "file": "auth/login.test.ts",
+              "line": 51,
+              "column": 7
+            },
+            {
+              "title": "存在しないメールアドレスでログインしようとすると、エラーメッセージが表示されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 17,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 115,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                          "column": 16,
+                          "line": 6
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:31.849Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                        "column": 16,
+                        "line": 6
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "932ff77a7ef026530189-5e7b3144b045b53c7487",
+              "file": "auth/login.test.ts",
+              "line": 70,
+              "column": 7
+            },
+            {
+              "title": "パスワードが間違っている場合、エラーメッセージが表示されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 18,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 119,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                          "column": 16,
+                          "line": 6
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                            "column": 16,
+                            "line": 6
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 4 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m 5 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 6 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 7 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 8 |\u001b[39m\n \u001b[90m 9 |\u001b[39m   test(\u001b[32m'登録済みユーザーがログインできること'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/auth/login.test.ts:6:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:32.683Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/auth/login.test.ts",
+                        "column": 16,
+                        "line": 6
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "932ff77a7ef026530189-9b1fe486c4e75ce73a6a",
+              "file": "auth/login.test.ts",
+              "line": 90,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "data/export-import.test.ts",
+      "file": "data/export-import.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "データエクスポート/インポート機能",
+          "file": "data/export-import.test.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "メモデータをJSON形式でエクスポートできること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 516,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/data/export-import.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/data/export-import.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/data/export-import.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/data/export-import.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:27.484Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/data/export-import.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9343653a8ed8790c0806-c9b499598ae7d995bc25",
+              "file": "data/export-import.test.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "JSON形式のメモデータをインポートできること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 230,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/data/export-import.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/data/export-import.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/data/export-import.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/data/export-import.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:29.788Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/data/export-import.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9343653a8ed8790c0806-eb75e52c225f4b8990d7",
+              "file": "data/export-import.test.ts",
+              "line": 38,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "group/create-group.test.ts",
+      "file": "group/create-group.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "グループ作成機能",
+          "file": "group/create-group.test.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "新しいグループを作成できること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 490,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/group/create-group.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/group/create-group.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:27.484Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1cc1f16252b7abab3ad8-0098d77b8cb82dbb0d31",
+              "file": "group/create-group.test.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "グループ名が未入力の場合、エラーメッセージが表示されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 262,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/group/create-group.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/group/create-group.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:29.791Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1cc1f16252b7abab3ad8-b4f36b0d982a6dd819c6",
+              "file": "group/create-group.test.ts",
+              "line": 41,
+              "column": 7
+            },
+            {
+              "title": "既存のグループを編集できること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 15,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 162,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/group/create-group.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/group/create-group.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:30.931Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/group/create-group.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1cc1f16252b7abab3ad8-55d5955af95caf8c1d62",
+              "file": "group/create-group.test.ts",
+              "line": 61,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "memo/create-memo.test.ts",
+      "file": "memo/create-memo.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "メモ作成機能",
+          "file": "memo/create-memo.test.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "メモの新規作成が正常に行えること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 513,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/memo/create-memo.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/memo/create-memo.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:27.476Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b76735c4dde5911908c7-4d6c5f1ec6498ee8cc88",
+              "file": "memo/create-memo.test.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "タイトルが未入力の場合、エラーメッセージが表示されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 235,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/memo/create-memo.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_SOCKET_NOT_CONNECTED at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/memo/create-memo.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:29.782Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b76735c4dde5911908c7-666b9b8fd77ae1343dd5",
+              "file": "memo/create-memo.test.ts",
+              "line": 41,
+              "column": 7
+            },
+            {
+              "title": "タイトルが空文字の場合、エラーメッセージが表示されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 183,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/memo/create-memo.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/memo/create-memo.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:30.913Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/memo/create-memo.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b76735c4dde5911908c7-7ecc2c9a4e47075e3dfe",
+              "file": "memo/create-memo.test.ts",
+              "line": 58,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "memo/edit-memo.test.ts",
+      "file": "memo/edit-memo.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "メモ編集機能",
+          "file": "memo/edit-memo.test.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "既存のメモを編集できること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 514,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/memo/edit-memo.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/memo/edit-memo.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/memo/edit-memo.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/memo/edit-memo.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:27.443Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/memo/edit-memo.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1000f57ac0ae32085478-1dd5f960b661a1ec7a98",
+              "file": "memo/edit-memo.test.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "編集後のデータが正しく保存されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 226,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/memo/edit-memo.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/memo/edit-memo.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/memo/edit-memo.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/memo/edit-memo.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:29.754Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/memo/edit-memo.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1000f57ac0ae32085478-308cb758ab7cf90d535c",
+              "file": "memo/edit-memo.test.ts",
+              "line": 43,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "realtime/realtime-edit.test.ts",
+      "file": "realtime/realtime-edit.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "リアルタイム編集機能",
+          "file": "realtime/realtime-edit.test.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "複数ユーザーが同時に同じメモを編集できること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 516,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:27.480Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "8f4b127ec59d79bc39d2-cb545c8437839368510c",
+              "file": "realtime/realtime-edit.test.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "編集競合が正しく処理されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 247,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:29.775Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/realtime/realtime-edit.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "8f4b127ec59d79bc39d2-a73971e0b7b0bb3f9c46",
+              "file": "realtime/realtime-edit.test.ts",
+              "line": 41,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "search/search-memo.test.ts",
+      "file": "search/search-memo.test.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "メモ検索機能",
+          "file": "search/search-memo.test.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "キーワードを入力してメモを検索できること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 192,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/search/search-memo.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/search/search-memo.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/search/search-memo.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/search/search-memo.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:30.863Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/search/search-memo.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b061d3dc711e56c869b3-6d385f12bc3a5004e38f",
+              "file": "search/search-memo.test.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "検索結果が0件の場合、適切なメッセージが表示されること",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 16,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 173,
+                      "error": {
+                        "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n    at /home/noe/notetree/playwright-tests/search/search-memo.test.ts:7:16",
+                        "location": {
+                          "file": "/home/noe/notetree/playwright-tests/search/search-memo.test.ts",
+                          "column": 16,
+                          "line": 7
+                        },
+                        "snippet": "\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/noe/notetree/playwright-tests/search/search-memo.test.ts",
+                            "column": 16,
+                            "line": 7
+                          },
+                          "message": "Error: page.goto: net::ERR_CONNECTION_RESET at http://localhost:3000/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  5 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m  6 |\u001b[39m     \u001b[90m// テスト前にアプリケーションにアクセス\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  7 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'http://localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  8 |\u001b[39m     \n \u001b[90m  9 |\u001b[39m     \u001b[90m// ログイン処理（必要に応じて）\u001b[39m\n \u001b[90m 10 |\u001b[39m     \u001b[90m// await page.getByRole('button', { name: 'ログイン' }).click();\u001b[39m\u001b[0m\n\u001b[2m    at /home/noe/notetree/playwright-tests/search/search-memo.test.ts:7:16\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-02T12:42:31.784Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "/home/noe/notetree/playwright-tests/search/search-memo.test.ts",
+                        "column": 16,
+                        "line": 7
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b061d3dc711e56c869b3-d0261953aa133e676102",
+              "file": "search/search-memo.test.ts",
+              "line": 37,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-08-02T12:42:27.858Z",
+    "duration": 6413.706,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 19,
+    "flaky": 0
+  }
+}

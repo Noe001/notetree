@@ -15,6 +15,7 @@ services:
             - http://localhost:5173
             - http://localhost:3000
             - http://localhost:3001
+            - "*"
           methods:
             - GET
             - POST
@@ -32,13 +33,16 @@ services:
             - Authorization
             - X-Client-Info
             - apikey
+            - X-Supabase-Client-Info
           exposed_headers:
             - Access-Control-Allow-Origin
             - Access-Control-Allow-Credentials
             - Access-Control-Allow-Headers
             - Access-Control-Allow-Methods
+            - X-Supabase-Client-Info
           credentials: true
           max_age: 3600
+          preflight_continue: false
 
   - name: rest-service
     url: http://supabase-rest:3000/
@@ -54,6 +58,7 @@ services:
             - http://localhost:5173
             - http://localhost:3000
             - http://localhost:3001
+            - "*"
           methods:
             - GET
             - POST
@@ -71,13 +76,16 @@ services:
             - Authorization
             - X-Client-Info
             - apikey
+            - X-Supabase-Client-Info
           exposed_headers:
             - Access-Control-Allow-Origin
             - Access-Control-Allow-Credentials
             - Access-Control-Allow-Headers
             - Access-Control-Allow-Methods
+            - X-Supabase-Client-Info
           credentials: true
           max_age: 3600
+          preflight_continue: false
 
   - name: realtime-service
     url: http://realtime:4000/
