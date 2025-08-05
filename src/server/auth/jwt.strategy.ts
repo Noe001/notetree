@@ -12,26 +12,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly supabaseAuthService: SupabaseAuthService,
   ) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'default_secret_key',
-    });
+      super({
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        ignoreExpiration: false,
+        secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
+      });
   }
 
   async validate(payload: any) {
-    // Mock token processing
-    if (payload.sub && payload.sub.startsWith('mock_jwt_')) {
-      return {
-        id: '0bfbe520-bae0-41b1-95da-cf9a6b00c351',
-        email: 'mock@example.com',
-        name: 'Mock User',
-        username: 'mockuser',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-    }
-
     // Supabaseトークンの検証を試みる
     // Note: ExtractJwt.fromAuthHeaderAsBearerToken()は関数であり、直接ヘッダーを取得するものではない
     // 実際のトークン検証はpassport-jwtが行うため、ここではpayloadからユーザー情報を取得する

@@ -31,37 +31,10 @@ export class MemoService {
         throw new BadRequestException('Title is required');
       }
 
-      // ユーザー確認 - 存在しない場合は作成
-      let user;
-      try {
-        this.logger.log(`Attempting to find user ${userId}`);
-        user = await this.userService.findOne(userId);
-        this.logger.log(`User found: ${user.id}`);
-      } catch (error) {
-        // User doesn't exist, create a mock user
-        this.logger.log(`User ${userId} not found, creating mock user`);
-        try {
-          this.logger.log(`Calling UserService.create with customId: ${userId}`);
-          user = await this.userService.create({
-            name: 'Mock User',
-            username: `user_${userId}`,
-            email: `user_${userId}@example.com`,
-            password: 'mock_password_123', // モックパスワードを追加
-          });
-          this.logger.log(`User created successfully: ${user.id}`);
-        } catch (createError: any) {
-          // If user creation fails, try to find the user again
-          this.logger.log(`User creation failed: ${createError.message}`);
-          this.logger.log(`Trying to find user again`);
-          try {
-            user = await this.userService.findOne(userId);
-            this.logger.log(`User found after retry: ${user.id}`);
-          } catch (findError) {
-            // If still not found, throw the original error
-            this.logger.error(`Failed to create or find user ${userId}`);
-            throw new InternalServerErrorException(`User ${userId} not found and could not be created`);
-          }
-        }
+      // ユーザー確認
+      const user = await this.userService.findOne(userId);
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
       // グループ確認（グループIDが指定されている場合）

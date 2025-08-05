@@ -245,7 +245,10 @@ export class GroupController {
   async inviteMember(@Param('id') groupId: string, @Body() inviteMemberDto: InviteMemberDto, @Req() req: any) {
     try {
       this.logger.log(`POST /groups/${groupId}/invite called`);
-      const invitedById = req.user?.id || 'test-user-id'; // 暫定的なユーザーID
+      const invitedById = req.user?.id;
+      if (!invitedById) {
+        throw new HttpException('User not authenticated', HttpStatus.UNAUTHORIZED);
+      }
       const result = await this.groupService.inviteMember(groupId, inviteMemberDto, invitedById);
       return {
         success: true,

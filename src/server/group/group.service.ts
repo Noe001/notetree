@@ -31,29 +31,10 @@ export class GroupService {
         throw new BadRequestException('Group name is required');
       }
 
-      // Check if user exists, if not create a mock user
-      let user;
-      try {
-        user = await this.userService.findOne(ownerId);
-      } catch (error) {
-        // User doesn't exist, create a mock user
-        this.logger.log(`User ${ownerId} not found, creating mock user`);
-        try {
-          user = await this.userService.create({
-            name: 'Mock User',
-            username: `user_${ownerId}`,
-            email: `user_${ownerId}@example.com`,
-            password: 'mock_password_123', // モックパスワードを追加
-          });
-        } catch (createError: any) {
-          // If user creation fails due to conflict (user already exists), find the existing user
-          if (createError.message && createError.message.includes('already exists')) {
-            this.logger.log(`User already exists, finding existing user`);
-            user = await this.userService.findOne(ownerId);
-          } else {
-            throw createError;
-          }
-        }
+      // ユーザーの存在確認
+      const user = await this.userService.findOne(ownerId);
+      if (!user) {
+        throw new NotFoundException(`User with ID ${ownerId} not found`);
       }
 
       const group = this.groupRepository.create({
@@ -373,29 +354,9 @@ export class GroupService {
       }
 
       // ユーザーの存在確認
-      let user;
-      try {
-        user = await this.userService.findOne(userId);
-      } catch (error) {
-        // User doesn't exist, create a mock user
-        this.logger.log(`User ${userId} not found, creating mock user`);
-        try {
-          user = await this.userService.create({
-            name: 'Mock User',
-            username: `user_${userId}`,
-            email: `user_${userId}@example.com`,
-            password: 'mock_password_123', // モックパスワードを追加
-          });
-        } catch (createError: any) {
-          // If user creation fails, try to find the user again
-          this.logger.log(`User creation failed: ${createError.message}`);
-          try {
-            user = await this.userService.findOne(userId);
-          } catch (findError) {
-            this.logger.error(`Failed to create or find user ${userId}`);
-            throw new Error(`User ${userId} not found and could not be created`);
-          }
-        }
+      const user = await this.userService.findOne(userId);
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
       // 既にメンバーかどうか確認
@@ -445,29 +406,9 @@ export class GroupService {
       }
 
       // ユーザーの存在確認
-      let user;
-      try {
-        user = await this.userService.findOne(userId);
-      } catch (error) {
-        // User doesn't exist, create a mock user
-        this.logger.log(`User ${userId} not found, creating mock user`);
-        try {
-          user = await this.userService.create({
-            name: 'Mock User',
-            username: `user_${userId}`,
-            email: `user_${userId}@example.com`,
-            password: 'mock_password_123', // モックパスワードを追加
-          });
-        } catch (createError: any) {
-          // If user creation fails, try to find the user again
-          this.logger.log(`User creation failed: ${createError.message}`);
-          try {
-            user = await this.userService.findOne(userId);
-          } catch (findError) {
-            this.logger.error(`Failed to create or find user ${userId}`);
-            throw new Error(`User ${userId} not found and could not be created`);
-          }
-        }
+      const user = await this.userService.findOne(userId);
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
       // 既にメンバーかどうか確認
