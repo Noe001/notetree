@@ -1,164 +1,61 @@
 services:
-  frontend:
+  # Development environment
+  notetree-dev:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NODE_ENV=development
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: notetree_dev
     ports:
-      - "5173:5173"
+      - "5173:5173"  # Next.js
+      - "3001:3001"  # NestJS
     volumes:
-      - ./frontend:/app
+      - .:/app
       - /app/node_modules
-      - /app/.next
     environment:
-      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-      - NEXT_PUBLIC_API_URL=http://localhost:3000
-      - WATCHPACK_POLLING=true
-      - FAST_REFRESH=true
-      - CHOKIDAR_USEPOLLING=true
-    depends_on:
-      backend:
-        condition: service_started
-      supabase-kong:
-        condition: service_started
-      db:
-        condition: service_healthy
+      - NODE_ENV=development
+    profiles:
+      - dev
+    restart: unless-stopped
+    networks:
+      - notetree-network
 
-  backend:
+  # Production environment
+  notetree-prod:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-      args:
-        - NODE_ENV=development
+    container_name: notetree_prod
     ports:
       - "3000:3000"
-      - "9229:9229" # For debugging
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-      - SUPABASE_URL=http://supabase-kong:8000
-      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.M5I029KMgBfIY5CiC4Gsv9PE9VBiTIMa_W3TJWtG7Mg
-    depends_on:
-      db:
-        condition: service_healthy
+      - NODE_ENV=production
+    profiles:
+      - prod
+    restart: unless-stopped
+    networks:
+      - notetree-network
 
-  simple-api-server:
-    build:
-      context: .
-      dockerfile: simple-api-server.Dockerfile
-    ports:
-      - "3001:3000"
-    volumes:
-      - ./memos-data.json:/app/memos-data.json
+  # Database for development (optional)
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: notetree_postgres_dev
     environment:
-      - NODE_ENV=development
-      - JWT_SECRET=thisisareallylongandsecuresecret
-      - SUPABASE_JWT_SECRET=thisisareallylongandsecuresecret
-    depends_on:
-      db:
-        condition: service_healthy
-
-  websocket-server:
-    build:
-      context: .
-      dockerfile: websocket-server.Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: supabase/postgres:15.1.0.117
-    restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-    volumes:
-      - supabase_db:/var/lib/postgresql/data
-      - ./supabase/migrations:/docker-entrypoint-initdb.d
+      POSTGRES_DB: notetree_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  supabase-kong:
-    image: kong:3.5
-    restart: always
-    environment:
-      - KONG_DATABASE=off
-      - KONG_DECLARATIVE_CONFIG=/etc/kong/kong.yml
-      - KONG_DNS_ORDER=LAST,A,CNAME
-      - KONG_PLUGINS=request-transformer,cors,key-auth
-    ports:
-      - "8000:8000"
-      - "8443:8443"
-      - "8001:8001"
-      - "8444:8444"
     volumes:
-      - ./supabase/kong.yml:/etc/kong/kong.yml
-    depends_on:
-      supabase-auth:
-        condition: service_started
-      supabase-rest:
-        condition: service_started
-      db:
-        condition: service_healthy
+      - postgres_dev_data:/var/lib/postgresql/data
+    profiles:
+      - dev
+    restart: unless-stopped
+    networks:
+      - notetree-network
 
-  supabase-auth:
-    image: supabase/gotrue:v2.132.3
-    restart: always
-    environment:
-      - GOTRUE_API_HOST=0.0.0.0
-      - GOTRUE_API_PORT=9999
-      - API_EXTERNAL_URL=http://localhost:5173
-
-      - GOTRUE_DB_DRIVER=postgres
-      - GOTRUE_DB_DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres?search_path=auth
-      - GOTRUE_DB_SCHEMA=auth
-      - GOTRUE_JWT_SECRET=thisisareallylongandsecuresecret
-      - GOTRUE_SITE_URL=http://localhost:5173
-      - GOTRUE_URI_ALLOW_LIST=http://localhost:5173/**
-      - GOTRUE_DB_AUTOMIGRATE=true
-      - GOTRUE_DB_MIGRATIONS_PATH=""
-
-      - GOTRUE_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3001
-      - GOTRUE_CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-Client-Info,apikey
-      - GOTRUE_CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
-    depends_on:
-      db:
-        condition: service_healthy
-    command: ["/usr/local/bin/gotrue"]
-    expose:
-      - "9999"
-
-  supabase-rest:
-    image: postgrest/postgrest:v12.0.2
-    restart: always
-    environment:
-      - PGRST_DB_URI=postgresql://postgres:postgres@db:5432/postgres
-      - PGRST_DB_SCHEMA=public,auth,storage
-      - PGRST_DB_ANON_ROLE=anon
-      - PGRST_JWT_SECRET=thisisareallylongandsecuresecret
-      - PGRST_SERVER_CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:3001
-      - PGRST_SERVER_CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-Client-Info,apikey
-      - PGRST_SERVER_CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
-    depends_on:
-      db:
-        condition: service_healthy
-    expose:
-      - "3000"
+networks:
+  notetree-network:
+    driver: bridge
 
 volumes:
-  supabase_db:
+  postgres_dev_data:
