@@ -75,15 +75,18 @@ npm run test:production-api
 ### ディレクトリ構造
 
 ```
-frontend/
-├── components/          # React コンポーネント
-├── pages/              # Next.js ページ
-├── lib/                # ユーティリティとライブラリ
-├── hooks/              # カスタム React Hooks
-├── types/              # TypeScript 型定義
-├── styles/             # グローバルスタイル
-├── public/             # 静的ファイル
-└── __tests__/          # テストファイル
+notetree/
+├── components/         # React コンポーネント
+├── hooks/             # カスタム React Hooks
+├── lib/               # ユーティリティとライブラリ
+├── pages/             # Next.js ページ
+├── public/            # 静的ファイル
+├── src/               # サーバーサイドコード
+│   └── server/        # NestJS サーバー
+├── styles/            # グローバルスタイル
+├── types/             # TypeScript 型定義
+├── __tests__/         # テストファイル
+└── playwright-tests/  # Playwright E2Eテスト
 ```
 
 ## 本番環境へのデプロイ

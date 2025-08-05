@@ -13,7 +13,7 @@ import { AuthModule } from './auth/auth.module';
       type: 'postgres',
       url: process.env.DATABASE_URL || 'postgresql://postgres:postgres@db:5432/postgres',
       autoLoadEntities: true,
-      synchronize: false, // 一時的に無効化
+      synchronize: process.env.NODE_ENV !== 'production', // Should always be false in production
       logging: true,
       extra: {
         uuidExtension: 'pgcrypto'

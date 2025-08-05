@@ -34,6 +34,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // ローカルストレージキー
 const AUTH_STORAGE_KEY = 'notetree_auth';
 
+// 開発環境でのみlocalStorageを使用するように制限
+const isDevelopment = process.env.NODE_ENV === 'development';
+const useLocalStorage = isDevelopment;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -45,41 +49,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('セッション更新（ローカルストレージベース）');
   }, []);
 
-  // 初期化時にローカルストレージからセッションを取得
+  // 初期化時にセッションを取得
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        console.log('ローカルストレージからセッションを取得');
-        const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (storedAuth) {
-          const authData = JSON.parse(storedAuth);
-          // APIサーバーにプロフィールを確認してトークンの有効性を検証
-          try {
-            const profileResponse = await apiClient.getProfile(authData.session.access_token);
-            if (profileResponse.success && profileResponse.data) {
-              const userData: User = {
-                id: profileResponse.data.id,
-                email: profileResponse.data.email,
-                name: profileResponse.data.name,
-                createdAt: profileResponse.data.createdAt
-              };
-              setUser(userData);
-              setSession({
-                access_token: authData.session.access_token,
-                user: userData
-              });
-            } else {
-              // トークンが無効な場合は削除
+        if (useLocalStorage) {
+          console.log('ローカルストレージからセッションを取得');
+          const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
+          if (storedAuth) {
+            const authData = JSON.parse(storedAuth);
+            // APIサーバーにプロフィールを確認してトークンの有効性を検証
+            try {
+              const profileResponse = await apiClient.getProfile(authData.session.access_token);
+              if (profileResponse.success && profileResponse.data) {
+                const userData: User = {
+                  id: profileResponse.data.id,
+                  email: profileResponse.data.email,
+                  name: profileResponse.data.name,
+                  createdAt: profileResponse.data.createdAt
+                };
+                setUser(userData);
+                setSession({
+                  access_token: authData.session.access_token,
+                  user: userData
+                });
+              } else {
+                // トークンが無効な場合は削除
+                localStorage.removeItem(AUTH_STORAGE_KEY);
+              }
+            } catch (error) {
+              console.error('トークン検証エラー:', error);
               localStorage.removeItem(AUTH_STORAGE_KEY);
             }
-          } catch (error) {
-            console.error('トークン検証エラー:', error);
-            localStorage.removeItem(AUTH_STORAGE_KEY);
           }
         }
       } catch (error) {
         console.error('セッション取得エラー:', error);
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+        if (useLocalStorage) {
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+        }
       } finally {
         setLoading(false);
       }
@@ -98,11 +106,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // APIサーバーから返されたトークンを使用
-      const token = response.data.access_token;
+      const token = response.data?.access_token;
+      if (!token) {
+        return { error: { message: 'トークンが取得できませんでした' } };
+      }
       
       // プロフィール情報を取得
       const profileResponse = await apiClient.getProfile(token);
-      if (!profileResponse.success) {
+      if (!profileResponse.success || !profileResponse.data) {
         return { error: { message: 'プロフィール取得に失敗しました' } };
       }
 
@@ -118,12 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: user
       };
 
-      // ローカルストレージに保存
-      const authData = {
-        session: newSession,
-        timestamp: Date.now()
-      };
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+      // 開発環境でのみローカルストレージに保存
+      if (useLocalStorage) {
+        const authData = {
+          session: newSession,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+      }
 
       setUser(user);
       setSession(newSession);
@@ -147,11 +160,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // APIサーバーから返されたトークンを使用
-      const token = response.data.access_token;
+      const token = response.data?.access_token;
+      if (!token) {
+        return { error: { message: 'トークンが取得できませんでした' } };
+      }
       
       // プロフィール情報を取得
       const profileResponse = await apiClient.getProfile(token);
-      if (!profileResponse.success) {
+      if (!profileResponse.success || !profileResponse.data) {
         return { error: { message: 'プロフィール取得に失敗しました' } };
       }
 
@@ -167,12 +183,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: user
       };
 
-      // ローカルストレージに保存
-      const authData = {
-        session: newSession,
-        timestamp: Date.now()
-      };
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+      // 開発環境でのみローカルストレージに保存
+      if (useLocalStorage) {
+        const authData = {
+          session: newSession,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+      }
 
       setUser(user);
       setSession(newSession);
@@ -189,8 +207,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      // ローカルストレージから削除
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      // 開発環境でのみローカルストレージから削除
+      if (useLocalStorage) {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      }
       setUser(null);
       setSession(null);
       return { error: null };

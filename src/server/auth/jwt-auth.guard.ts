@@ -21,16 +21,17 @@ export class JwtAuthGuard implements CanActivate {
     
     try {
       // Handle mock JWT tokens for testing
-      if (token.startsWith('mock_jwt_')) {
-        const parts = token.split('_');
-        if (parts.length >= 3) {
-          // Use the created user ID for consistent testing
-          const userId = '0bfbe520-bae0-41b1-95da-cf9a6b00c351';
-          request.user = { id: userId, sub: userId };
-          return true;
-        }
-        return false;
+    // Mock JWT handling should only be enabled in development/test environments
+    if (process.env.NODE_ENV !== 'production' && token.startsWith('mock_jwt_')) {
+      const parts = token.split('_');
+      if (parts.length >= 3) {
+        // Use the created user ID for consistent testing
+        const userId = '0bfbe520-bae0-41b1-95da-cf9a6b00c351';
+        request.user = { id: userId, sub: userId };
+        return true;
       }
+      return false;
+    }
 
       // First, try to verify the token as a Supabase JWT
       try {

@@ -492,7 +492,7 @@ export default function App() {
   const fetchMemos = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.getMemos(CURRENT_USER_ID, selectedGroupId);
+      const response = await apiClient.getMemos(user?.id, selectedGroupId);
       if (response.success && response.data) {
         const convertedMemos: Memo[] = response.data.map(apiMemo => ({
           id: apiMemo.id,
