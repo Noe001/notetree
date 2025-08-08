@@ -171,6 +171,14 @@ export function useRealtimeMemoSave(
   const [isSaving, setIsSaving] = React.useState(false);
   const [lastSaved, setLastSaved] = React.useState<Date | null>(null);
 
+  // 直近のテキストスナップショットを保持し、メモ切替時や非テキスト変更での保存を防ぐ
+  const previousSnapshotRef = React.useRef<{
+    memoId: string | null;
+    title: string;
+    content: string;
+    tagsKey: string; // tags の JSON 文字列化
+  } | null>(null);
+
   const debouncedSave = React.useCallback(
     debounce(async (memoToSave: CreateMemoDto | Partial<Memo>, memoId: string | null) => {
       if (!currentUser) {
@@ -205,20 +213,48 @@ export function useRealtimeMemoSave(
     [createMemo, updateMemo, currentUser, onMemoSaved, autoSaveDelay]
   );
 
-  // currentMemoの変更を監視し、自動保存をトリガー
+  // メモ内容(タイトル/本文/タグ)の変更のみ監視し、自動保存をトリガー
   React.useEffect(() => {
-    if (currentMemo) {
-      // MemoからCreateMemoDto/UpdateMemoDtoに変換
-      const dataToSave: CreateMemoDto | Partial<Memo> = {
-        title: currentMemo.title,
-        content: currentMemo.content,
-        tags: currentMemo.tags,
-        isPrivate: currentMemo.isPrivate,
-        groupId: currentMemo.groupId,
-      };
-      debouncedSave(dataToSave, currentMemo.id);
+    if (!currentMemo) return;
+
+    const tagsKey = JSON.stringify(currentMemo.tags || []);
+    const snapshot = {
+      memoId: currentMemo.id || null,
+      title: currentMemo.title || '',
+      content: currentMemo.content || '',
+      tagsKey,
+    };
+
+    const prev = previousSnapshotRef.current;
+
+    // メモ切替直後はスナップショットを更新するだけで保存しない
+    if (!prev || prev.memoId !== snapshot.memoId) {
+      previousSnapshotRef.current = snapshot;
+      return;
     }
-  }, [currentMemo, debouncedSave]);
+
+    // テキスト変更がない場合は何もしない
+    const hasTextChanges =
+      prev.title !== snapshot.title ||
+      prev.content !== snapshot.content ||
+      prev.tagsKey !== snapshot.tagsKey;
+
+    if (!hasTextChanges) return;
+
+    // 保存対象データ（文字入力/消去の変更のみ）
+    const dataToSave: CreateMemoDto | Partial<Memo> = {
+      title: snapshot.title,
+      content: snapshot.content,
+      tags: JSON.parse(snapshot.tagsKey),
+      isPrivate: currentMemo.isPrivate, // API要件上含めるが、トリガーはテキストのみ
+      groupId: currentMemo.groupId,
+    };
+
+    debouncedSave(dataToSave, currentMemo.id);
+
+    // 直ちにスナップショットを更新（デバウンス中の連続入力に対応）
+    previousSnapshotRef.current = snapshot;
+  }, [currentMemo?.id, currentMemo?.title, currentMemo?.content, JSON.stringify(currentMemo?.tags), currentMemo?.isPrivate, currentMemo?.groupId, debouncedSave]);
 
   return { isSaving, lastSaved };
 }

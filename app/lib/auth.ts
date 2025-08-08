@@ -3,21 +3,17 @@ import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { User } from '@/types';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 interface CustomJwtPayload extends jwt.JwtPayload {
   userId: string;
   email: string;
 }
 
-// cookies() の戻り値の型を明示的に定義する
-interface SyncRequestCookies {
-  get(name: string): { value: string } | undefined;
-}
-
 export async function getAuthenticatedUser(): Promise<User | null> {
   console.log('getAuthenticatedUser: Request received.');
-  const cookieStore = cookies() as unknown as SyncRequestCookies;
+  // Next.js 15 以降では cookies() は非同期
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth_token')?.value;
   console.log('getAuthenticatedUser: All cookies:', cookieStore);
   console.log('getAuthenticatedUser: auth_token value:', token);

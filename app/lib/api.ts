@@ -4,7 +4,11 @@ import { notifyError } from '@/lib/notify';
 
 export type { ApiResponse, User, Group, GroupMember, Invitation, Memo, CreateMemoDto } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// 実行環境に応じてベースURLを決定（ブラウザでは現在のオリジンを優先）
+const API_BASE_URL =
+  typeof window !== 'undefined'
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 // 環境に応じたAPI設定
 const getApiConfig = () => {
@@ -217,6 +221,16 @@ class ApiClient {
     }
   }
 
+  async getGroupMembers(groupId: string): Promise<ApiResponse<GroupMember[]>> {
+    try {
+      return await this.request(`/api/groups/${groupId}/members`);
+    } catch (error) {
+      console.error('Failed to fetch group members:', error);
+      notifyError('メンバー取得に失敗しました', error instanceof Error ? error.message : undefined);
+      throw error;
+    }
+  }
+
   async createGroup(groupData: { name: string; description?: string }): Promise<ApiResponse<Group>> {
     try {
       return await this.request('/api/groups', {
@@ -277,13 +291,38 @@ class ApiClient {
 
   async inviteMember(groupId: string, invitation: { email?: string; userId?: string; role?: 'admin' | 'member' }): Promise<ApiResponse<Invitation>> {
     try {
-      return await this.request(`/api/groups/${groupId}/invite`, {
+      return await this.request(`/api/groups/${groupId}/invitations`, {
           method: 'POST',
           body: JSON.stringify(invitation)
       });
     } catch (error) {
       console.error('Failed to invite member:', error);
       notifyError('メンバー招待に失敗しました', error instanceof Error ? error.message : undefined);
+      throw error;
+    }
+  }
+
+  async updateGroupMemberRole(groupId: string, memberId: string, role: 'admin' | 'member'): Promise<ApiResponse<GroupMember>> {
+    try {
+      return await this.request(`/api/groups/${groupId}/members/${memberId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ role: role.toUpperCase() })
+      });
+    } catch (error) {
+      console.error('Failed to update member role:', error);
+      notifyError('メンバーロール更新に失敗しました', error instanceof Error ? error.message : undefined);
+      throw error;
+    }
+  }
+
+  async removeGroupMember(groupId: string, memberId: string): Promise<ApiResponse<void>> {
+    try {
+      return await this.request(`/api/groups/${groupId}/members/${memberId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Failed to remove member:', error);
+      notifyError('メンバー削除に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
   }

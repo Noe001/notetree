@@ -12,14 +12,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const memos = await prisma.memo.findMany({
-      where: {
-        authorId: user.id, // 自分のメモのみ取得
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
+    const { searchParams } = new URL(req.url);
+    const groupId = searchParams.get('groupId');
+
+    let memos;
+    if (groupId) {
+      // グループ選択時: メンバーであることを検証し、当該グループの全メモを取得
+      const isMember = await prisma.groupMember.findFirst({
+        where: { groupId, userId: user.id },
+      });
+      const group = await prisma.group.findUnique({ where: { id: groupId } });
+      if (!group || (group.ownerId !== user.id && !isMember)) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
+
+      memos = await prisma.memo.findMany({
+        where: { groupId },
+        orderBy: { updatedAt: 'desc' },
+      });
+    } else {
+      // 個人メモ: 自分が作者のメモのみ
+      memos = await prisma.memo.findMany({
+        where: { authorId: user.id },
+        orderBy: { updatedAt: 'desc' },
+      });
+    }
 
     const processedMemos = memos.map(memo => ({
       ...memo,

@@ -6,12 +6,12 @@ export async function GET(req: NextRequest) {
     const user = await getAuthenticatedUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ success: true, data: { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt, updatedAt: user.updatedAt } });
   } catch (error: any) {
     console.error('Error fetching authenticated user:', error);
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }

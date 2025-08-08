@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req: NextRequest) {
   const { email, password, name } = await req.json();
@@ -12,7 +12,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email, password, and username are required' }, { status: 400 });
   }
 
-  // JWT_SECRETはデフォルトでローカル値を使用
+  if (!JWT_SECRET) {
+    return NextResponse.json({ error: 'JWT_SECRET is not set in environment variables' }, { status: 500 });
+  }
 
   try {
     // 先に email の重複を確認（name の重複チェックは一時的に無効化）

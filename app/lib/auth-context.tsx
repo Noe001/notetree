@@ -42,19 +42,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch('/api/auth/me');
       const data = await response.json();
 
-      if (response.ok && data.user) {
-        console.log('fetchUser: response.ok:', response.ok, 'data.user:', data.user);
+      if (response.ok && data.success && data.data) {
+        console.log('fetchUser: response.ok:', response.ok, 'data.user:', data.data);
         const fetchedUser: User = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name || '',
-          createdAt: data.user.createdAt,
-          updatedAt: data.user.updatedAt || new Date().toISOString(),
+          id: data.data.id,
+          email: data.data.email,
+          name: data.data.name || '',
+          createdAt: data.data.createdAt,
+          updatedAt: data.data.updatedAt || new Date().toISOString(),
         };
         setUser(fetchedUser);
         setSession({ user: fetchedUser });
       } else {
-        console.log('fetchUser: response.ok:', response.ok, 'data.user:', data.user, 'Setting user/session to null.');
+        console.log('fetchUser: response.ok:', response.ok, 'data:', data, 'Setting user/session to null.');
         setUser(null);
         setSession(null);
       }

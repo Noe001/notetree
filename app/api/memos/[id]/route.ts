@@ -28,12 +28,14 @@ export async function GET(req: NextRequest, { params }: any) {
 
     const processedMemo = {
       ...memo,
+      createdAt: memo.createdAt.toISOString(),
+      updatedAt: memo.updatedAt.toISOString(),
       tags: JSON.parse(memo.tags) as string[], // JSON文字列を配列にパース
     };
-    return NextResponse.json({ memo: processedMemo });
+    return NextResponse.json({ success: true, data: processedMemo });
   } catch (error: any) {
     console.error('Error fetching memo:', error);
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }
 
@@ -73,11 +75,17 @@ export async function PUT(req: NextRequest, { params }: any) {
       },
     });
 
-    return NextResponse.json({ memo: updatedMemo });
+    const responseData = {
+      ...updatedMemo,
+      createdAt: updatedMemo.createdAt.toISOString(),
+      updatedAt: updatedMemo.updatedAt.toISOString(),
+      tags: JSON.parse((updatedMemo as any).tags ?? '[]') as string[],
+    };
+    return NextResponse.json({ success: true, data: responseData });
   } catch (error: any) {
     console.error('Error updating memo:', error);
     console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }
 
@@ -122,11 +130,18 @@ export async function PATCH(req: NextRequest, { params }: any) {
       include: { author: { select: { id: true, email: true, name: true } }, group: true }, // 更新されたメモを返す際にauthorとgroupを含める
     });
 
-    return NextResponse.json({ memo: updatedMemo });
+    const responseData = {
+      ...updatedMemo,
+      createdAt: updatedMemo.createdAt.toISOString(),
+      updatedAt: updatedMemo.updatedAt.toISOString(),
+      tags: JSON.parse((updatedMemo as any).tags ?? '[]') as string[],
+    };
+
+    return NextResponse.json({ success: true, data: responseData });
   } catch (error: any) {
     console.error('Error patching memo:', error);
     console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }
 
@@ -150,9 +165,9 @@ export async function DELETE(req: NextRequest, { params }: any) {
 
     await prisma.memo.delete({ where: { id } });
 
-    return NextResponse.json({ message: 'Memo deleted successfully' }, { status: 204 });
+    return NextResponse.json({ success: true, data: null });
   } catch (error: any) {
     console.error('Error deleting memo:', error);
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }

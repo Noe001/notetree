@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: any) {
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id: groupId } = params;
@@ -19,18 +19,18 @@ export async function GET(req: NextRequest, { params }: any) {
     });
 
     if (!group) {
-      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
     }
 
     // 権限チェック：グループのオーナーまたはメンバーであること
     const isMember = group.members.some((member: { userId: string }) => member.userId === user.id);
     if (group.ownerId !== user.id && !isMember) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }
 
-    return NextResponse.json({ members: group.members });
+    return NextResponse.json({ success: true, data: group.members });
   } catch (error: any) {
     console.error('Error fetching group members:', error);
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }

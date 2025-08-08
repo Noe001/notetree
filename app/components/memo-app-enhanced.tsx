@@ -41,7 +41,7 @@ import { JoinGroupDialog } from "@/components/group/join-group-dialog";
 // import { useRealtimeNotifications } from "@/components/notification/notification-provider";
 
 // APIクライアントのインポート
-import { apiClient, Memo as ApiMemo, CreateMemoDto } from "@/lib/api";
+import { apiClient, Memo as ApiMemo, CreateMemoDto, Group, GroupMember } from "@/lib/api";
 import { useGroups } from "@/hooks/useApi";
 import { useRealtimeMemoSave } from "@/lib/memo-features";
 
@@ -447,7 +447,10 @@ export default function App() {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
-  const [groups, setGroups] = useState<any[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const { user: currentUser } = useAuth();
+
   
   // ダイアログの状態管理
   const [editMemoDialogOpen, setEditMemoDialogOpen] = useState(false);
@@ -674,12 +677,23 @@ export default function App() {
 
   const handleCreateGroup = async (groupData: { name: string; description?: string }) => {
     try {
-      // グループ作成のロジックを実装
-      console.log('Creating group:', groupData);
-      // 実際のAPI呼び出しをここに実装
-      
-      // グループリストを更新
-      setGroups(prevGroups => [...prevGroups, { id: Date.now().toString(), ...groupData }]);
+      const res = await apiClient.createGroup(groupData);
+      if (res.success && res.data) {
+        const createdGroup = res.data as Group;
+        setGroups(prev => [createdGroup, ...prev]);
+        setSelectedGroupId(createdGroup.id);
+        // 作成直後はメンバー一覧も取得
+        try {
+          const memRes = await apiClient.getGroupMembers(createdGroup.id);
+          if (memRes.success && memRes.data) {
+            setGroupMembers(memRes.data);
+          }
+        } catch (e) {
+          console.error('Failed to fetch members after create:', e);
+        }
+      } else {
+        throw new Error(res.error || 'グループ作成に失敗しました');
+      }
     } catch (error) {
       console.error('Failed to create group:', error);
       throw error;
@@ -688,12 +702,12 @@ export default function App() {
 
   const handleJoinByGroupId = async (groupId: string) => {
     try {
-      // グループ参加のロジックを実装
-      console.log('Joining group by ID:', groupId);
-      // 実際のAPI呼び出しをここに実装
-      
-      // グループリストを更新
-      setGroups(prevGroups => [...prevGroups, { id: groupId, name: `Group ${groupId}` }]);
+      const res = await apiClient.joinGroupByGroupId(groupId);
+      if (res.success && (res as any).data) {
+        // 参加後にグループ一覧を再取得
+        await fetchGroups();
+        setSelectedGroupId(groupId);
+      }
     } catch (error) {
       console.error('Failed to join group:', error);
       throw error;
@@ -702,12 +716,10 @@ export default function App() {
 
   const handleJoinByInvitation = async (invitationToken: string) => {
     try {
-      // 招待トークンでのグループ参加のロジックを実装
-      console.log('Joining group by invitation:', invitationToken);
-      // 実際のAPI呼び出しをここに実装
-      
-      // グループリストを更新
-      setGroups(prevGroups => [...prevGroups, { id: Date.now().toString(), name: 'Invited Group' }]);
+      const res = await apiClient.joinGroupByInvitation(invitationToken);
+      if (res.success) {
+        await fetchGroups();
+      }
     } catch (error) {
       console.error('Failed to join group by invitation:', error);
       throw error;
@@ -785,6 +797,69 @@ export default function App() {
       return 0;
     });
   }, [memos, searchQuery, sortKey, activeTags, selectedGroupId]);
+
+  const fetchGroups = async () => {
+    try {
+      const res = await apiClient.getGroups();
+      if (res.success && res.data) {
+        setGroups(res.data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch groups:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  // グループメンバー取得（選択グループ変更時）
+  useEffect(() => {
+    const loadMembers = async () => {
+      if (!selectedGroupId) {
+        setGroupMembers([]);
+        return;
+      }
+      try {
+        const res = await apiClient.getGroupMembers(selectedGroupId);
+        if (res.success && res.data) {
+          setGroupMembers(res.data);
+        } else {
+          setGroupMembers([]);
+        }
+      } catch (e) {
+        console.error('Failed to fetch group members:', e);
+        setGroupMembers([]);
+      }
+    };
+    loadMembers();
+  }, [selectedGroupId]);
+
+  // ダイアログ用に型を整形（hooksは常にトップレベルで呼ぶ）
+  const groupForDialog = useMemo(() => {
+    const g = groups.find(g => g.id === (selectedGroupId || ''));
+    if (!g) return null;
+    return {
+      id: g.id,
+      name: g.name,
+      description: g.description || '',
+      isPrivate: false,
+      memberCount: groupMembers.length,
+      createdAt: g.createdAt,
+      updatedAt: g.updatedAt,
+    };
+  }, [groups, selectedGroupId, groupMembers.length]);
+
+  const membersForDialogs = useMemo(() => {
+    return groupMembers.map((m) => ({
+      id: m.id,
+      name: (m as any).name || m.user?.name || m.user?.email || 'ユーザー',
+      email: (m as any).email || m.user?.email || '',
+      role: (m.role as any) || 'member',
+      avatar: undefined,
+      joinedAt: (m as any).joinedAt || new Date().toISOString(),
+    }));
+  }, [groupMembers]);
 
   if (loading) {
     return (
@@ -971,47 +1046,94 @@ export default function App() {
       <GroupSettingsDialog 
         open={isGroupSettingsDialogOpen} 
         onOpenChange={setGroupSettingsDialogOpen}
-        group={null} // TODO: 現在のグループを渡す
-        members={[]} // TODO: グループメンバーを渡す
-        currentUserId="current-user-id" // TODO: 現在のユーザーIDを渡す
+        group={groupForDialog}
+        members={membersForDialogs}
+        currentUserId={currentUser?.id || ''}
         onUpdateGroup={async (id, data) => {
-          // TODO: グループ更新API呼び出し
-          console.log('Update group:', id, data);
+          const res = await apiClient.updateGroup(id, data as Partial<Group>);
+          if (res.success && res.data) {
+            setGroups(prev => prev.map(g => g.id === id ? res.data as Group : g));
+          } else {
+            throw new Error(res.error || 'グループ更新に失敗しました');
+          }
         }}
         onInviteMember={async (groupId, email, role) => {
-          // TODO: メンバー招待API呼び出し
-          console.log('Invite member:', groupId, email, role);
+          // GroupSettingsDialogのroleは 'editor' | 'viewer' を想定しているためAPIの 'member' に正規化
+          const normalizedRole: 'admin' | 'member' = 'member';
+          const res = await apiClient.inviteMember(groupId, { email, role: normalizedRole });
+          if (!res.success) {
+            throw new Error(res.error || '招待に失敗しました');
+          }
         }}
         onRemoveMember={async (groupId, memberId) => {
-          // TODO: メンバー削除API呼び出し
-          console.log('Remove member:', groupId, memberId);
+          const res = await apiClient.removeGroupMember(groupId, memberId);
+          if (res.success) {
+            const refresh = await apiClient.getGroupMembers(groupId);
+            if (refresh.success && refresh.data) setGroupMembers(refresh.data as GroupMember[]);
+          } else {
+            throw new Error(res.error || 'メンバー削除に失敗しました');
+          }
         }}
         onUpdateMemberRole={async (groupId, memberId, role) => {
-          // TODO: メンバーロール更新API呼び出し
-          console.log('Update member role:', groupId, memberId, role);
+          // GroupSettingsDialogのroleは 'owner'|'admin'|'editor'|'viewer' の文字列。
+          // APIは 'admin' | 'member' を受け付けるため、owner以外はadmin/memberに丸める。
+          const upper = (role || '').toString().toLowerCase();
+          const mapped: 'admin' | 'member' = upper === 'admin' ? 'admin' : 'member';
+          const res = await apiClient.updateGroupMemberRole(groupId, memberId, mapped);
+          if (res.success) {
+            const refresh = await apiClient.getGroupMembers(groupId);
+            if (refresh.success && refresh.data) setGroupMembers(refresh.data as GroupMember[]);
+          } else {
+            throw new Error(res.error || 'メンバーロール更新に失敗しました');
+          }
         }}
         onDeleteGroup={async (id) => {
-          // TODO: グループ削除API呼び出し
-          console.log('Delete group:', id);
+          const res = await apiClient.deleteGroup(id);
+          if (res.success) {
+            setGroups(prev => prev.filter(g => g.id !== id));
+            if (selectedGroupId === id) {
+              setSelectedGroupId(undefined);
+              // グループ解除後は個人メモを再読込
+              const memosRes = await apiClient.getMemos();
+              if (memosRes.success && memosRes.data) {
+                setMemos(memosRes.data as any);
+              }
+            }
+          } else {
+            throw new Error(res.error || 'グループ削除に失敗しました');
+          }
         }}
       />
 
       <MemberManagementDialog 
         open={isMemberManagementDialogOpen} 
         onOpenChange={setMemberManagementDialogOpen}
-        groupId={selectedGroupId || ''} // 現在選択されているグループIDを渡す
-        members={[]} // TODO: 実際のメンバー情報を渡す
+        groupId={selectedGroupId || ''}
+        members={membersForDialogs as any}
         onInviteMember={async (email, role) => {
-          // TODO: メンバー招待API呼び出し
-          console.log('Invite member:', email, role);
+          if (!selectedGroupId) throw new Error('グループ未選択です');
+          const res = await apiClient.inviteMember(selectedGroupId, { email, role });
+          if (!res.success) throw new Error(res.error || '招待に失敗しました');
         }}
         onRemoveMember={async (memberId) => {
-          // TODO: メンバー削除API呼び出し
-          console.log('Remove member:', memberId);
+          if (!selectedGroupId) throw new Error('グループ未選択です');
+          const res = await apiClient.removeGroupMember(selectedGroupId, memberId);
+          if (res.success) {
+            const refresh = await apiClient.getGroupMembers(selectedGroupId);
+            if (refresh.success && refresh.data) setGroupMembers(refresh.data as GroupMember[]);
+          } else {
+            throw new Error(res.error || 'メンバー削除に失敗しました');
+          }
         }}
         onUpdateMemberRole={async (memberId, role) => {
-          // TODO: メンバーロール更新API呼び出し
-          console.log('Update member role:', memberId, role);
+          if (!selectedGroupId) throw new Error('グループ未選択です');
+          const res = await apiClient.updateGroupMemberRole(selectedGroupId, memberId, role);
+          if (res.success) {
+            const refresh = await apiClient.getGroupMembers(selectedGroupId);
+            if (refresh.success && refresh.data) setGroupMembers(refresh.data as GroupMember[]);
+          } else {
+            throw new Error(res.error || 'メンバーロール更新に失敗しました');
+          }
         }}
       />
 

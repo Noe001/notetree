@@ -7,12 +7,6 @@ module.exports = nextJest({
     // serverやappのエイリアスは使われていないため削除
   },
   transform: {
-    '^.+\.(t|j)sx?$': ['@swc/jest'],
-    '^.+\.(ts|tsx)$': 'ts-jest',
-  },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-    },
+    '^.+\\.(t|j)sx?$': ['@swc/jest'],
   },
 });

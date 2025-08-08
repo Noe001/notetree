@@ -29,10 +29,10 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ groups });
+    return NextResponse.json({ success: true, data: groups });
   } catch (error: any) {
     console.error('Error fetching groups:', error);
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }
 
@@ -58,9 +58,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ group }, { status: 201 });
+    return NextResponse.json({ success: true, data: group }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating group:', error);
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }
