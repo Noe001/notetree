@@ -36,7 +36,7 @@ npm run dev
 
 ### 環境変数
 
-`.env.local`ファイルを作成し、以下の環境変数を設定してください：
+`.env.local` もしくは `.env` ファイルを作成し、以下の環境変数を設定してください（本番・Compose では `.env` を参照します）：
 
 ```env
 # Next.jsアプリケーションがAPIリクエストを送信するバックエンドのURL
@@ -62,6 +62,9 @@ NEXT_PUBLIC_ENABLE_MOCK=true
 
 # Next.jsの実行環境 (開発時: development, 本番時: production)
 NODE_ENV=development
+
+# 内部サービス間の共有シークレット（WebSocketサーバ → Frontend API）
+INTERNAL_API_TOKEN=change_me_to_a_random_secret
 ```
 
 ## 開発
@@ -143,7 +146,7 @@ npm run docker:logs
 
 ```bash
 # 本番環境の起動（Docker Compose）
-npm run docker:prod
+docker-compose --env-file .env up -d --build
 
 # 本番環境のビルドと起動
 npm run docker:prod:build
@@ -155,11 +158,8 @@ npm run docker:down
 #### 直接的なDockerコマンド
 
 ```bash
-# 開発環境
-docker-compose --profile dev up -d
-
-# 本番環境
-docker-compose --profile prod up -d
+# .env を指定して起動
+docker-compose --env-file .env up -d
 
 # 全環境の停止
 docker-compose down

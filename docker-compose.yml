@@ -4,20 +4,17 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        DATABASE_URL: postgresql://postgres:postgres@db:5432/notetree
+        DATABASE_URL: ${DATABASE_URL}
     ports:
       - "3000:3000"
     environment:
-      # `README.md` に記載されていた環境変数
-      NEXT_PUBLIC_API_URL: http://localhost:3000 # Next.js内蔵APIを同一オリジンで呼び出し
-      NEXT_PUBLIC_WS_URL: ws://localhost:3001 # WebSocketサーバーのURLをクライアントサイドに公開
-      JWT_SECRET: "YOUR_SUPER_SECRET_JWT_KEY" # JWTシークレット
-      # Supabaseを使用しないため、以下の環境変数は削除
-      # NEXT_PUBLIC_SUPABASE_URL: http://localhost:8000
-      # NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      NEXT_PUBLIC_ENABLE_MOCK: true
-      NODE_ENV: production # 開発環境ではなく本番環境として起動
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/notetree
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_ENABLE_MOCK: ${NEXT_PUBLIC_ENABLE_MOCK}
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
     restart: always
     command: sh -c "npx prisma migrate deploy && npm run start"
     depends_on:
@@ -29,42 +26,33 @@ services:
       context: ./websocket-server
       dockerfile: Dockerfile
     ports:
-      - "3001:3001" # WebSocketサーバーのポート
+      - "3001:3001"
     environment:
       WS_PORT: 3001
-      JWT_SECRET: "YOUR_SUPER_SECRET_JWT_KEY" # JWTシークレットを渡す
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/notetree
+      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      API_URL: http://frontend:3000
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
     restart: always
     depends_on:
       - db
+      - frontend
 
   db:
-    image: postgres:16-alpine # 安定版のPostgreSQLイメージを使用
+    image: postgres:16-alpine
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: notetree
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - db_data:/var/lib/postgresql/data # データ永続化のためのボリューム
+      - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d notetree"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
-
-  # バックエンドサービス（NestJSまたは他のAPI）
-  # 現在、このバックエンドのソースコードの場所が不明なため、コメントアウトしています。
-  # ユーザーからの情報が得られ次第、ここに定義します。
-  # backend:
-  #   build: ./path/to/backend/source # バックエンドのソースコードのパス
-  #   ports:
-  #     - "3001:3001"
-  #   environment:
-  #     DATABASE_URL: postgresql://myuser:mypassword@db:5432/mydatabase
-  #   depends_on:
-  #     - db
 
 volumes:
   db_data:

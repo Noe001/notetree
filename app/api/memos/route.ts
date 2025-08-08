@@ -2,12 +2,12 @@ export const runtime = 'nodejs'; // RuntimeをNode.jsに設定
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getAuthenticatedUser } from '@/lib/auth';
+import { getAuthenticatedUserFromRequest } from '@/lib/auth';
 import { CreateMemoDto, Memo } from '@/lib/api';
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUserFromRequest();
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       ...memo,
       createdAt: memo.createdAt.toISOString(), // Dateをstringに変換
       updatedAt: memo.updatedAt.toISOString(), // Dateをstringに変換
-      tags: JSON.parse(memo.tags) as string[], // JSON文字列を配列にパース
+      tags: (memo as any).tags as string[],
     }));
     return NextResponse.json({ success: true, data: processedMemos });
   } catch (error: any) {
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUserFromRequest();
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         isPrivate,
         authorId: user.id,
         groupId,
-        tags: JSON.stringify(tags || []), // タグをJSON文字列として保存
+        tags: tags || [],
       },
     });
 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       ...newMemo,
       createdAt: newMemo.createdAt.toISOString(), // Dateをstringに変換
       updatedAt: newMemo.updatedAt.toISOString(), // Dateをstringに変換
-      tags: JSON.parse(newMemo.tags) as string[],
+      tags: (newMemo as any).tags as string[],
     };
 
     return NextResponse.json({ success: true, data: responseData }, { status: 201 });

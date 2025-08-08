@@ -10,7 +10,9 @@ interface AuthenticatedWebSocket extends WebSocket {
 
 const PORT = process.env.WS_PORT ? parseInt(process.env.WS_PORT, 10) : 3001; // WebSocketサーバーのポート
 const JWT_SECRET = process.env.JWT_SECRET;
-const API_BASE_URL = process.env.API_URL || 'http://localhost:3000'; // バックエンドAPIのURL
+// Prefer explicit API_URL; fall back to localhost for local dev (compose will set API_URL explicitly)
+const API_BASE_URL = process.env.API_URL || 'http://localhost:3000';
+const INTERNAL_API_TOKEN = process.env.INTERNAL_API_TOKEN;
 
 const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -157,6 +159,7 @@ async function handleWebSocketMessage(ws: AuthenticatedWebSocket, message: WebSo
             // WebSocket経由でのAPI呼び出しの場合、認証が必要な場合は別途考慮
             // 例えば、内部APIキーやサービスアカウントトークンなど
             'X-User-Id': ws.userId || '', // 例としてユーザーIDをヘッダーに含める
+            ...(INTERNAL_API_TOKEN ? { 'X-Internal-Api-Token': INTERNAL_API_TOKEN } : {}),
           },
           body: method !== 'DELETE' ? JSON.stringify(message.payload) : undefined,
         });

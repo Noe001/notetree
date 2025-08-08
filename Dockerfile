@@ -1,28 +1,24 @@
-# ベースイメージとしてNode.js 18を使用
-FROM node:20-alpine
-
-ARG DATABASE_URL
-
-# コンテナ内の作業ディレクトリを設定
+FROM node:20-alpine AS deps
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-# package.jsonとpackage-lock.jsonをコピーし、依存関係をインストール
-COPY package*.json ./ 
-RUN npm ci
-
-# アプリケーションのソースコードをコピー
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
+ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
-
-# Prismaクライアントを生成
 RUN npx prisma generate
-
-# Next.jsアプリケーションをビルド
 RUN npm run build
 
-# アプリケーションを起動するためのコマンド
-CMD ["npm", "run", "start"]
-
-# Next.jsのデフォルトポートを公開
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/prisma ./prisma
 EXPOSE 3000
+CMD ["npm", "run", "start"]

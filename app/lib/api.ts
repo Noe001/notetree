@@ -75,9 +75,8 @@ class ApiClient {
       credentials: 'include', // クッキーを送信
     };
 
-    console.log('API Client: Making request to', url, 'with config:', config);
+    // reduce verbose logging in production
     const response = await fetch(url, config);
-    console.log('API Client: Raw fetch response received:', response);
     
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
@@ -109,7 +108,6 @@ class ApiClient {
     }
 
     const data = await response.json();
-    console.log('API Client: Parsed response data:', data);
     return data;
   }
 

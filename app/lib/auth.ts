@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { User } from '@/types';
@@ -11,24 +11,16 @@ interface CustomJwtPayload extends jwt.JwtPayload {
 }
 
 export async function getAuthenticatedUser(): Promise<User | null> {
-  console.log('getAuthenticatedUser: Request received.');
-  // Next.js 15 以降では cookies() は非同期
   const cookieStore = await cookies();
   const token = cookieStore.get('auth_token')?.value;
-  console.log('getAuthenticatedUser: All cookies:', cookieStore);
-  console.log('getAuthenticatedUser: auth_token value:', token);
 
-  if (!token) {
-    console.log('getAuthenticatedUser: No token found.');
-    return null;
-  }
+  if (!token) return null;
 
   try {
     if (!JWT_SECRET) {
       throw new Error('JWT_SECRET is not set in environment variables');
     }
     const payload = jwt.verify(token, JWT_SECRET) as CustomJwtPayload;
-    console.log('getAuthenticatedUser: JWT decoded payload:', payload);
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: { id: true, email: true, name: true, createdAt: true, updatedAt: true },
@@ -36,7 +28,26 @@ export async function getAuthenticatedUser(): Promise<User | null> {
 
     return user;
   } catch (error: any) {
-    console.error('getAuthenticatedUser: JWT verification failed:', error);
+    // トークン不正はnull返却
     return null;
   }
+}
+
+// 内部サービス（例: WebSocketサーバー）からの認証用ヘルパー
+export async function getAuthenticatedUserFromRequest(): Promise<User | null> {
+  // まずは内部トークンでのサービス間認証を確認
+  const internalToken = (await headers()).get('x-internal-api-token');
+  const expectedToken = process.env.INTERNAL_API_TOKEN;
+  const userIdFromHeader = (await headers()).get('x-user-id');
+
+  if (expectedToken && internalToken === expectedToken && userIdFromHeader) {
+    // 信頼できる内部呼び出しとして userId を受理
+    return prisma.user.findUnique({
+      where: { id: userIdFromHeader },
+      select: { id: true, email: true, name: true, createdAt: true, updatedAt: true },
+    });
+  }
+
+  // フォールバック: 通常のCookieベースJWT
+  return getAuthenticatedUser();
 }

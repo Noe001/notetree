@@ -6,28 +6,28 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
+  id          String        @id @default(uuid())
+  email       String        @unique
   password    String
   name        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   memos       Memo[]
   groups      GroupMember[]
-  ownedGroups Group[]  @relation("OwnedGroups")
+  ownedGroups Group[]       @relation("OwnedGroups")
 }
 
 model Memo {
   id        String   @id @default(uuid())
   title     String
   content   String
-  tags      String @default("[]") // tagsフィールドをJSON文字列で保存
-  isPrivate Boolean @default(false) // 新規追加: メモの公開/非公開フラグ
+  tags      Json     @default("[]")
+  isPrivate Boolean  @default(false) // 新規追加: メモの公開/非公開フラグ
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   author    User     @relation(fields: [authorId], references: [id])
@@ -37,12 +37,12 @@ model Memo {
 }
 
 model Group {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  owner       User     @relation("OwnedGroups", fields: [ownerId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  owner       User          @relation("OwnedGroups", fields: [ownerId], references: [id])
   ownerId     String
   members     GroupMember[]
   memos       Memo[]

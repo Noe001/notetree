@@ -2,11 +2,11 @@ export const runtime = 'nodejs'; // RuntimeをNode.jsに設定
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getAuthenticatedUser } from '@/lib/auth';
+import { getAuthenticatedUserFromRequest } from '@/lib/auth';
 
 export async function GET(req: NextRequest, { params }: any) {
   try {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -30,7 +30,8 @@ export async function GET(req: NextRequest, { params }: any) {
       ...memo,
       createdAt: memo.createdAt.toISOString(),
       updatedAt: memo.updatedAt.toISOString(),
-      tags: JSON.parse(memo.tags) as string[], // JSON文字列を配列にパース
+      // Prisma Json 型をそのまま返す
+      tags: (memo as any).tags as string[],
     };
     return NextResponse.json({ success: true, data: processedMemo });
   } catch (error: any) {
@@ -41,7 +42,7 @@ export async function GET(req: NextRequest, { params }: any) {
 
 export async function PUT(req: NextRequest, { params }: any) {
   try {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -79,7 +80,7 @@ export async function PUT(req: NextRequest, { params }: any) {
       ...updatedMemo,
       createdAt: updatedMemo.createdAt.toISOString(),
       updatedAt: updatedMemo.updatedAt.toISOString(),
-      tags: JSON.parse((updatedMemo as any).tags ?? '[]') as string[],
+      tags: (updatedMemo as any).tags as string[],
     };
     return NextResponse.json({ success: true, data: responseData });
   } catch (error: any) {
@@ -91,7 +92,7 @@ export async function PUT(req: NextRequest, { params }: any) {
 
 export async function PATCH(req: NextRequest, { params }: any) {
   try {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -118,7 +119,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
     const updatedData: { [key: string]: any } = {};
     if (title !== undefined) updatedData.title = title;
     if (content !== undefined) updatedData.content = content;
-    if (tags !== undefined) updatedData.tags = JSON.stringify(tags); // 配列をJSON文字列に変換
+    if (tags !== undefined) updatedData.tags = tags; // Prisma Json 型にそのまま代入
     if (isPrivate !== undefined) updatedData.isPrivate = isPrivate;
     if (groupId !== undefined) {
       updatedData.group = groupId ? { connect: { id: groupId } } : { disconnect: true };
@@ -134,7 +135,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
       ...updatedMemo,
       createdAt: updatedMemo.createdAt.toISOString(),
       updatedAt: updatedMemo.updatedAt.toISOString(),
-      tags: JSON.parse((updatedMemo as any).tags ?? '[]') as string[],
+      tags: (updatedMemo as any).tags as string[],
     };
 
     return NextResponse.json({ success: true, data: responseData });
@@ -147,7 +148,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
 
 export async function DELETE(req: NextRequest, { params }: any) {
   try {
-    const user = await getAuthenticatedUser();
+    const user = await getAuthenticatedUserFromRequest();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
