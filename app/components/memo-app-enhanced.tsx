@@ -79,7 +79,7 @@ const SidebarContent = ({
   selectedGroupId?: string;
   onGroupSelect: (groupId: string | undefined) => void;
 }) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   
   return (
   <aside className="flex flex-col h-full border-l bg-background">
@@ -154,7 +154,20 @@ const SidebarContent = ({
         </nav>
         <Separator />
         <div className="mt-auto">
-             <Button variant="ghost" className="w-full text-destructive hover:text-destructive justify-start">
+             <Button 
+               variant="ghost" 
+               className="w-full text-destructive hover:text-destructive justify-start"
+               onClick={async () => {
+                 try {
+                   await signOut();
+                   // ProtectedRoute により未ログインなら自動で認証フォームに切り替わるが、
+                   // 念のためルートへ遷移してUI反映を確実にする
+                   window.location.href = '/';
+                 } catch (e) {
+                   console.error('Failed to sign out:', e);
+                 }
+               }}
+             >
                 <LogOut className="h-5 w-5" />
                 <span className="ml-4">ログアウト</span>
             </Button>
