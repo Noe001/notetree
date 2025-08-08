@@ -41,6 +41,19 @@ Object.defineProperty(performance, 'memory', {
   },
 })
 
+// Mock next/headers for server-side functions like cookies()
+jest.mock('next/headers', () => ({
+  cookies: jest.fn(() => ({
+    get: jest.fn((name: string) => {
+      // Return a mock cookie value based on name, or null
+      if (name === 'auth_token') {
+        return { value: 'mock-auth-token' };
+      }
+      return null;
+    }),
+  })),
+}));
+
 // Mock console methods for cleaner test output
 const originalError = console.error
 beforeAll(() => {

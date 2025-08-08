@@ -11,7 +11,8 @@ NoteTreeは、モダンなメモ管理アプリケーションです。React、N
 - **スタイリング**: Tailwind CSS
 - **UI コンポーネント**: Radix UI
 - **状態管理**: React Hooks
-- **認証**: Supabase Auth
+- **認証**: JWT (JSON Web Tokens)
+- **リアルタイム通信**: WebSocket
 - **API**: RESTful API
 - **テスト**: Jest + Testing Library
 
@@ -38,10 +39,28 @@ npm run dev
 `.env.local`ファイルを作成し、以下の環境変数を設定してください：
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+# Next.jsアプリケーションがAPIリクエストを送信するバックエンドのURL
+# Docker環境下では、フロントエンドコンテナからWebSocketサーバーにアクセスするためにサービス名を使用します。
+# 例: http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:3000 
+
+# WebSocketサーバーのURL (Docker環境下ではサービス名を使用)
+# 例: ws://localhost:3001
+NEXT_PUBLIC_WS_URL=ws://localhost:3001
+
+# JWT署名に使用する秘密鍵。安全なランダムな文字列を設定してください。
+# 例: openssl rand -base64 32
+JWT_SECRET=your_jwt_secret_key
+
+# PostgreSQLデータベースの接続文字列
+# Docker Composeを使用している場合、通常はサービス名とポートを使用します。
+# 例: postgresql://myuser:mypassword@db:5432/mydatabase
+DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydatabase
+
+# モックAPIを有効にするかどうか (開発時のみ使用)
 NEXT_PUBLIC_ENABLE_MOCK=true
+
+# Next.jsの実行環境 (開発時: development, 本番時: production)
 NODE_ENV=development
 ```
 
@@ -76,15 +95,19 @@ npm run test:production-api
 
 ```
 notetree/
+├── app/                 # Next.js App Router のルートディレクトリ
+│   ├── api/             # API ルート (認証、メモ、グループ、ユーザー)
+│   ├── (auth)/          # 認証関連のページ (例: ログイン、サインアップ)
+│   ├── (main)/          # 主要なアプリケーションのページ
+│   └── layout.tsx       # ルートレイアウト
 ├── components/         # React コンポーネント
 ├── hooks/             # カスタム React Hooks
-├── lib/               # ユーティリティとライブラリ
-├── pages/             # Next.js ページ
+├── lib/               # ユーティリティとライブラリ (prisma, auth, websocket-client など)
 ├── public/            # 静的ファイル
-├── src/               # サーバーサイドコード
-│   └── server/        # NestJS サーバー
+├── prisma/            # Prisma スキーマとマイグレーション
 ├── styles/            # グローバルスタイル
 ├── types/             # TypeScript 型定義
+├── websocket-server/  # 独立したWebSocketサーバーのコード
 ├── __tests__/         # テストファイル
 └── playwright-tests/  # Playwright E2Eテスト
 ```
@@ -153,9 +176,18 @@ docker run -p 3000:3000 notetree-frontend
 本番環境では以下の環境変数を設定してください：
 
 ```env
-NEXT_PUBLIC_API_URL=https://api.notetree.com
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+# Next.jsアプリケーションがAPIリクエストを送信するバックエンドのURL
+NEXT_PUBLIC_API_URL=https://api.example.com
+
+# WebSocketサーバーのURL
+NEXT_PUBLIC_WS_URL=wss://ws.example.com
+
+# JWT署名に使用する秘密鍵。安全なランダムな文字列を設定してください。
+JWT_SECRET=your_production_jwt_secret_key
+
+# PostgreSQLデータベースの接続文字列
+DATABASE_URL=postgresql://user:password@host:port/database
+
 NEXT_PUBLIC_ENABLE_MOCK=false
 NODE_ENV=production
 ```
@@ -232,7 +264,7 @@ npm run test:production-api
    - 環境変数が正しく設定されているか確認
 
 2. **認証エラー**
-   - Supabaseの設定を確認
+   - JWT_SECRETが設定されているか確認
    - セッショントークンが有効か確認
 
 3. **ビルドエラー**

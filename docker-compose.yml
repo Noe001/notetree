@@ -1,61 +1,70 @@
 services:
-  # Development environment
-  notetree-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: notetree_dev
-    ports:
-      - "5173:5173"  # Next.js
-      - "3001:3001"  # NestJS
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-    profiles:
-      - dev
-    restart: unless-stopped
-    networks:
-      - notetree-network
-
-  # Production environment
-  notetree-prod:
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: notetree_prod
+      args:
+        DATABASE_URL: postgresql://postgres:postgres@db:5432/notetree
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
-    profiles:
-      - prod
-    restart: unless-stopped
-    networks:
-      - notetree-network
+      # `README.md` に記載されていた環境変数
+      NEXT_PUBLIC_API_URL: http://localhost:3000 # Next.js内蔵APIを同一オリジンで呼び出し
+      NEXT_PUBLIC_WS_URL: ws://localhost:3001 # WebSocketサーバーのURLをクライアントサイドに公開
+      JWT_SECRET: "YOUR_SUPER_SECRET_JWT_KEY" # JWTシークレット
+      # Supabaseを使用しないため、以下の環境変数は削除
+      # NEXT_PUBLIC_SUPABASE_URL: http://localhost:8000
+      # NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      NEXT_PUBLIC_ENABLE_MOCK: true
+      NODE_ENV: production # 開発環境ではなく本番環境として起動
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/notetree
+    restart: always
+    command: sh -c "npx prisma migrate deploy && npm run start"
+    depends_on:
+      db:
+        condition: service_healthy
 
-  # Database for development (optional)
-  postgres-dev:
-    image: postgres:15-alpine
-    container_name: notetree_postgres_dev
+  websocket-server:
+    build:
+      context: ./websocket-server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001" # WebSocketサーバーのポート
     environment:
-      POSTGRES_DB: notetree_dev
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      WS_PORT: 3001
+      JWT_SECRET: "YOUR_SUPER_SECRET_JWT_KEY" # JWTシークレットを渡す
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/notetree
+    restart: always
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine # 安定版のPostgreSQLイメージを使用
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: notetree
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
-    profiles:
-      - dev
-    restart: unless-stopped
-    networks:
-      - notetree-network
+      - db_data:/var/lib/postgresql/data # データ永続化のためのボリューム
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notetree"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-networks:
-  notetree-network:
-    driver: bridge
+  # バックエンドサービス（NestJSまたは他のAPI）
+  # 現在、このバックエンドのソースコードの場所が不明なため、コメントアウトしています。
+  # ユーザーからの情報が得られ次第、ここに定義します。
+  # backend:
+  #   build: ./path/to/backend/source # バックエンドのソースコードのパス
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     DATABASE_URL: postgresql://myuser:mypassword@db:5432/mydatabase
+  #   depends_on:
+  #     - db
 
 volumes:
-  postgres_dev_data:
+  db_data:

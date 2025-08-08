@@ -153,3 +153,5 @@ frontend/build/
 # Backup files
 *.bak
 *.backup 
+
+/lib/generated/prisma
