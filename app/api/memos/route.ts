@@ -43,12 +43,13 @@ export async function GET(req: NextRequest) {
       ...memo,
       createdAt: memo.createdAt.toISOString(), // Dateをstringに変換
       updatedAt: memo.updatedAt.toISOString(), // Dateをstringに変換
-      tags: (memo as any).tags as string[],
+      tags: (memo as unknown as { tags: string[] }).tags,
     }));
     return NextResponse.json({ success: true, data: processedMemos });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching memos:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Something went wrong';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -80,12 +81,13 @@ export async function POST(req: NextRequest) {
       ...newMemo,
       createdAt: newMemo.createdAt.toISOString(), // Dateをstringに変換
       updatedAt: newMemo.updatedAt.toISOString(), // Dateをstringに変換
-      tags: (newMemo as any).tags as string[],
+      tags: (newMemo as unknown as { tags: string[] }).tags,
     };
 
     return NextResponse.json({ success: true, data: responseData }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating memo:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Something went wrong';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

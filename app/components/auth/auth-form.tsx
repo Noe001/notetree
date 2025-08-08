@@ -3,16 +3,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
-import { useAppNotifications } from '@/components/notification/notification-provider'
 import { useAuthForms } from '@/lib/use-auth-forms'
 
 export function AuthForm() {
   const [activeTab, setActiveTab] = useState('login')
-  const notify = useAppNotifications()
   const {
     isLoading,
     errors,
-    setErrors,
     loginForm,
     setLoginForm,
     signUpForm,

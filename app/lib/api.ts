@@ -1,6 +1,7 @@
 import { withPerformanceMonitoring } from './performance';
 import type { ApiResponse, User, Group, GroupMember, Invitation, Memo, CreateMemoDto } from '@/types';
 import { notifyError } from '@/lib/notify';
+import { logger } from '@/lib/logger';
 
 export type { ApiResponse, User, Group, GroupMember, Invitation, Memo, CreateMemoDto } from '@/types';
 
@@ -40,13 +41,13 @@ class ApiClient {
     for (let i = 0; i < attempts; i++) {
       try {
         return await fn();
-      } catch (error: any) {
-        lastError = error;
+      } catch (error: unknown) {
+        lastError = error as Error;
         
         // 最後のリトライでなければ待機
         if (i < attempts - 1) {
           const delay = Math.min(1000 * Math.pow(2, i), 10000); // 指数バックオフ（最大10秒）
-          console.log(`Retry attempt ${i + 1}/${attempts} after ${delay}ms delay`);
+          logger.debug(`Retry attempt ${i + 1}/${attempts} after ${delay}ms delay`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -87,11 +88,11 @@ class ApiClient {
         try {
           const errorText = await response.text();
           errorMessage = errorText || errorMessage;
-        } catch (e2) {
+      } catch (e2) {
           
         }
       }
-      console.error('API Client: Fetch error details:', errorMessage);
+      logger.error('API Client: Fetch error details:', errorMessage);
 
       switch (response.status) {
         case 401:
@@ -142,7 +143,7 @@ class ApiClient {
 
       return result;
     } catch (error) {
-      console.error('Failed to fetch memos:', error);
+      logger.error('Failed to fetch memos:', error);
       notifyError('メモ取得に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -151,7 +152,7 @@ class ApiClient {
   // メモ作成
   async createMemo(memoData: CreateMemoDto): Promise<ApiResponse<Memo>> {
     try {
-      console.log('apiClient.createMemo: Calling this.request...');
+      logger.debug('apiClient.createMemo: Calling this.request...');
       const result = await this.request('/api/memos', {
         method: 'POST',
         body: JSON.stringify(memoData)
@@ -159,7 +160,7 @@ class ApiClient {
 
       return result;
     } catch (error) {
-      console.error('Failed to create memo:', error);
+      logger.error('Failed to create memo:', error);
       notifyError('メモ作成に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -169,7 +170,7 @@ class ApiClient {
     try {
       return this.request(`/api/memos/${id}`);
     } catch (error) {
-      console.error('Failed to fetch memo:', error);
+      logger.error('Failed to fetch memo:', error);
       notifyError('メモ取得に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -182,7 +183,7 @@ class ApiClient {
         body: JSON.stringify(updates),
       });
     } catch (error) {
-      console.error('Failed to update memo:', error);
+      logger.error('Failed to update memo:', error);
       notifyError('メモ更新に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -194,7 +195,7 @@ class ApiClient {
         method: 'DELETE',
       });
     } catch (error) {
-      console.error('Failed to delete memo:', error);
+      logger.error('Failed to delete memo:', error);
       notifyError('メモ削除に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -213,7 +214,7 @@ class ApiClient {
     try {
       return await this.request('/api/groups');
     } catch (error) {
-      console.error('Failed to fetch groups:', error);
+      logger.error('Failed to fetch groups:', error);
       notifyError('グループ取得に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -223,7 +224,7 @@ class ApiClient {
     try {
       return await this.request(`/api/groups/${groupId}/members`);
     } catch (error) {
-      console.error('Failed to fetch group members:', error);
+      logger.error('Failed to fetch group members:', error);
       notifyError('メンバー取得に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -236,7 +237,7 @@ class ApiClient {
         body: JSON.stringify(groupData)
       });
     } catch (error) {
-      console.error('Failed to create group:', error);
+      logger.error('Failed to create group:', error);
       notifyError('グループ作成に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -249,7 +250,7 @@ class ApiClient {
           body: JSON.stringify(updates)
       });
     } catch (error) {
-      console.error('Failed to update group:', error);
+      logger.error('Failed to update group:', error);
       notifyError('グループ更新に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -261,7 +262,7 @@ class ApiClient {
           method: 'DELETE'
       });
     } catch (error) {
-      console.error('Failed to delete group:', error);
+      logger.error('Failed to delete group:', error);
       notifyError('グループ削除に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -271,7 +272,7 @@ class ApiClient {
     try {
       return await this.request(`/api/groups/${groupId}/invitations`);
     } catch (error) {
-      console.error('Failed to fetch invitations:', error);
+      logger.error('Failed to fetch invitations:', error);
       notifyError('招待一覧の取得に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -283,7 +284,7 @@ class ApiClient {
         method: 'DELETE'
       });
     } catch (error) {
-      console.error('Failed to revoke invitation:', error);
+      logger.error('Failed to revoke invitation:', error);
       notifyError('招待の失効に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -293,7 +294,7 @@ class ApiClient {
     try {
       return await this.request(`/api/users/search?q=${query}`);
     } catch (error) {
-      console.error('Failed to search users:', error);
+      logger.error('Failed to search users:', error);
       notifyError('ユーザー検索に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -306,7 +307,7 @@ class ApiClient {
           body: JSON.stringify(invitation)
       });
     } catch (error) {
-      console.error('Failed to invite member:', error);
+      logger.error('Failed to invite member:', error);
       notifyError('メンバー招待に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -319,7 +320,7 @@ class ApiClient {
         body: JSON.stringify({ role: role.toUpperCase() })
       });
     } catch (error) {
-      console.error('Failed to update member role:', error);
+      logger.error('Failed to update member role:', error);
       notifyError('メンバーロール更新に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -331,7 +332,7 @@ class ApiClient {
         method: 'DELETE'
       });
     } catch (error) {
-      console.error('Failed to remove member:', error);
+      logger.error('Failed to remove member:', error);
       notifyError('メンバー削除に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -344,7 +345,7 @@ class ApiClient {
         method: 'POST'
       });
     } catch (error) {
-      console.error('Failed to accept invitation:', error);
+      logger.error('Failed to accept invitation:', error);
       notifyError('招待の承認に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -356,7 +357,7 @@ class ApiClient {
           method: 'POST'
       });
     } catch (error) {
-      console.error('Failed to reject invitation:', error);
+      logger.error('Failed to reject invitation:', error);
       notifyError('招待の拒否に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -368,7 +369,7 @@ class ApiClient {
         method: 'POST'
       });
     } catch (error) {
-      console.error('Failed to join group by id:', error);
+      logger.error('Failed to join group by id:', error);
       notifyError('グループ参加に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }
@@ -381,7 +382,7 @@ class ApiClient {
         method: 'POST'
       });
     } catch (error) {
-      console.error('Failed to join group by invitation:', error);
+      logger.error('Failed to join group by invitation:', error);
       notifyError('招待からの参加に失敗しました', error instanceof Error ? error.message : undefined);
       throw error;
     }

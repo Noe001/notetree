@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { logger } from '@/lib/logger';
 import {
   Users, User, Plus, Settings, HelpCircle, LogOut, Search, ArrowUpDown, FilePenLine, Lock, Menu, X, Palette, Keyboard, Check, Trash2, Share2, ChevronRight
 } from "lucide-react";
@@ -363,13 +364,13 @@ export default function MemoApp() {
 
   const handleDeleteMemo = () => {
     if (selectedMemo) {
-      console.log('Delete memo:', selectedMemo.id);
+      logger.debug('Delete memo:', selectedMemo.id);
     }
   };
 
   const handleShareMemo = () => {
     if (selectedMemo) {
-      console.log('Share memo:', selectedMemo.id);
+      logger.debug('Share memo:', selectedMemo.id);
     }
   };
 

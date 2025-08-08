@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { logger } from '@/lib/logger';
 import { useAuth } from '@/lib/auth-context';
 import { WebSocketMessage, MemoCreatePayload, MemoUpdatePayload, MemoDeletePayload, GroupJoinPayload } from '@websocket-server/types';
 
@@ -65,38 +66,38 @@ export function useWebSocket() {
 
     if (user && !ws.current) {
       // 認証済みユーザーがいる場合のみWebSocketに接続
-      console.log('Attempting to connect to WebSocket...');
+      logger.debug('Attempting to connect to WebSocket...');
       const websocket = new WebSocket(WS_URL);
 
       websocket.onopen = () => {
         setIsConnected(true);
         setError(null);
-        console.log('WebSocket connected.');
+        logger.debug('WebSocket connected.');
       };
 
       websocket.onmessage = (event) => {
         try {
-          const message: WebSocketMessage<any, any> = JSON.parse(event.data);
+          const message: WebSocketMessage<unknown, unknown> = JSON.parse(event.data);
           setLastMessage(message);
-          console.log('Received message:', message);
+          logger.debug('Received message:', message);
         } catch (e) {
           console.error('Failed to parse WebSocket message:', e);
         }
       };
 
       websocket.onerror = (event) => {
-        console.error('WebSocket error:', event);
+        logger.error('WebSocket error:', event);
         setError(event);
       };
 
       websocket.onclose = (event) => {
         setIsConnected(false);
-        console.log('WebSocket disconnected:', event.code, event.reason);
+        logger.debug('WebSocket disconnected:', event.code, event.reason);
         // 再接続ロジック
         if (event.code !== 1000 && event.code !== 1001) { // 1000: 通常終了, 1001: 離脱
           // 認証情報がある場合のみ再接続を試みる
           if (user) {
-            console.log('Attempting to reconnect WebSocket in 3 seconds...');
+            logger.debug('Attempting to reconnect WebSocket in 3 seconds...');
             setTimeout(() => {
               // `ws.current`をnullにすることで、useEffectの次の実行で新しい接続を確立させる
               ws.current = null;
@@ -105,7 +106,7 @@ export function useWebSocket() {
               // ここではuserの存在のみでトリガーされることを期待する
             }, 3000);
           } else {
-            console.log('User not authenticated, not attempting to reconnect.');
+            logger.debug('User not authenticated, not attempting to reconnect.');
           }
         }
       };
@@ -114,14 +115,14 @@ export function useWebSocket() {
 
     } else if (!user && ws.current) {
       // ユーザーがログアウトした場合、WebSocket接続を切断
-      console.log('User logged out, closing WebSocket connection.');
+      logger.debug('User logged out, closing WebSocket connection.');
       ws.current.close();
       ws.current = null;
     }
 
     return () => {
       if (ws.current) {
-        console.log('Cleaning up WebSocket connection.');
+        logger.debug('Cleaning up WebSocket connection.');
         ws.current.close();
         ws.current = null;
       }

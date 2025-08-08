@@ -5,6 +5,7 @@ import {
   Users, User, Plus, Settings, HelpCircle, LogOut, Search, ArrowUpDown, FilePenLine, Lock, Menu, X, Palette, Keyboard, Check, Trash2, Share2
 } from "lucide-react";
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 // shadcn/uiコンポーネントのインポート
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -636,7 +637,7 @@ export default function App() {
 
   // メモダイアログハンドラー
   const handleOpenMemoCreate = async () => { // asyncを追加
-    console.log('handleOpenMemoCreate: Calling createMemo...');
+    logger.debug('handleOpenMemoCreate: Calling createMemo...');
     // 新しいメモを作成するAPIを直接呼び出す
     const response = await apiClient.createMemo({ // useMemoFeaturesから取得したcreateMemoを使用
       title: '新しいメモ', // 初期タイトルを設定
@@ -652,7 +653,7 @@ export default function App() {
       setSelectedMemo(newMemo);
       updateAllTags([newMemo, ...memos]); // 新しいメモでタグも更新
     } else {
-      console.error('新しいメモの作成に失敗しました:', response.error);
+      logger.error('新しいメモの作成に失敗しました:', response.error);
     }
   };
 
@@ -701,14 +702,14 @@ export default function App() {
           if (memRes.success && memRes.data) {
             setGroupMembers(memRes.data);
           }
-        } catch (e) {
-          console.error('Failed to fetch members after create:', e);
+      } catch (e) {
+          logger.error('Failed to fetch members after create:', e);
         }
       } else {
         throw new Error(res.error || 'グループ作成に失敗しました');
       }
     } catch (error) {
-      console.error('Failed to create group:', error);
+      logger.error('Failed to create group:', error);
       throw error;
     }
   };
@@ -721,8 +722,8 @@ export default function App() {
         await fetchGroups();
         setSelectedGroupId(groupId);
       }
-    } catch (error) {
-      console.error('Failed to join group:', error);
+      } catch (error) {
+        logger.error('Failed to join group:', error);
       throw error;
     }
   };
@@ -733,8 +734,8 @@ export default function App() {
       if (res.success) {
         await fetchGroups();
       }
-    } catch (error) {
-      console.error('Failed to join group by invitation:', error);
+      } catch (error) {
+        logger.error('Failed to join group by invitation:', error);
       throw error;
     }
   };
@@ -818,7 +819,7 @@ export default function App() {
         setGroups(res.data);
       }
     } catch (e) {
-      console.error('Failed to fetch groups:', e);
+      logger.error('Failed to fetch groups:', e);
     }
   };
 
@@ -841,7 +842,7 @@ export default function App() {
           setGroupMembers([]);
         }
       } catch (e) {
-        console.error('Failed to fetch group members:', e);
+        logger.error('Failed to fetch group members:', e);
         setGroupMembers([]);
       }
     };

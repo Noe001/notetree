@@ -101,7 +101,7 @@ export function useAuthForms() {
         setLoginForm({ email: '', password: '' })
         return true
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setErrors({ general: 'ログインに失敗しました。' })
       return false
     } finally {
@@ -128,7 +128,7 @@ export function useAuthForms() {
         setSignUpForm({ username: '', email: '', password: '', confirmPassword: '' })
         return true
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setErrors({ general: 'アカウント作成に失敗しました。' })
       return false
     } finally {
