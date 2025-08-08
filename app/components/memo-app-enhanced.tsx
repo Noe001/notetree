@@ -58,10 +58,10 @@ const CURRENT_USER_ID = 'e87a6ec4-16b8-44c7-b339-604f62d9557c';
 const SidebarContent = ({ 
   onOpenSettings, 
   onOpenProfile,
-  onOpenMemberManagement,
-  onOpenSearchResults,
-  onOpenExportImport,
-  onOpenKeyboardShortcuts,
+  // onOpenMemberManagement,
+  // onOpenSearchResults,
+  // onOpenExportImport,
+  // onOpenKeyboardShortcuts,
   onOpenCreateGroup,
   onOpenJoinGroup,
   groups,
@@ -70,13 +70,13 @@ const SidebarContent = ({
 }: { 
   onOpenSettings: () => void; 
   onOpenProfile: () => void;
-  onOpenMemberManagement: () => void;
-  onOpenSearchResults: () => void;
-  onOpenExportImport: () => void;
-  onOpenKeyboardShortcuts: () => void;
+  // onOpenMemberManagement: () => void;
+  // onOpenSearchResults: () => void;
+  // onOpenExportImport: () => void;
+  // onOpenKeyboardShortcuts: () => void;
   onOpenCreateGroup: () => void;
   onOpenJoinGroup: () => void;
-  groups: any[];
+  groups: { id: string; name: string }[];
   selectedGroupId?: string;
   onGroupSelect: (groupId: string | undefined) => void;
 }) => {
@@ -224,14 +224,14 @@ type MemoListPanelProps = {
   onCreateMemo: () => void;
   allTags: string[];
   selectedGroupId?: string;
-  groups: any[];
+  groups: { id: string; name: string }[];
 };
 
 const MemoListPanel = ({ memos, selectedMemo, onSelectMemo, onSearch, onSort, onTagToggle, activeTags, onCreateMemo, allTags, selectedGroupId, groups }: MemoListPanelProps) => {
   // ヘッダーのタイトルを動的に決定
   const headerTitle = useMemo(() => {
     if (selectedGroupId) {
-      const selectedGroup = groups?.find((group: any) => group.id === selectedGroupId);
+      const selectedGroup = groups?.find((group) => group.id === selectedGroupId);
       return selectedGroup ? selectedGroup.name : 'グループ';
     }
     return '個人メモ';
@@ -571,9 +571,10 @@ export default function App() {
       } else {
         throw new Error(response.error || 'メモの更新に失敗しました');
       }
-    } catch (error: any) {
-      console.error('Failed to update memo:', error);
-      throw new Error(error.message || 'メモの更新に失敗しました');
+    } catch (error: unknown) {
+      logger.error('Failed to update memo:', error);
+      const message = error instanceof Error ? error.message : 'メモの更新に失敗しました';
+      throw new Error(message);
     }
   };
 
@@ -594,9 +595,10 @@ export default function App() {
       } else {
         throw new Error(response.error || 'メモの削除に失敗しました');
       }
-    } catch (error: any) {
-      console.error('Failed to delete memo:', error);
-      throw new Error(error.message || 'メモの削除に失敗しました');
+    } catch (error: unknown) {
+      logger.error('Failed to delete memo:', error);
+      const message = error instanceof Error ? error.message : 'メモの削除に失敗しました';
+      throw new Error(message);
     }
   };
 
@@ -717,7 +719,7 @@ export default function App() {
   const handleJoinByGroupId = async (groupId: string) => {
     try {
       const res = await apiClient.joinGroupByGroupId(groupId);
-      if (res.success && (res as any).data) {
+      if (res.success && res.data) {
         // 参加後にグループ一覧を再取得
         await fetchGroups();
         setSelectedGroupId(groupId);
@@ -867,11 +869,11 @@ export default function App() {
   const membersForDialogs = useMemo(() => {
     return groupMembers.map((m) => ({
       id: m.id,
-      name: (m as any).name || m.user?.name || m.user?.email || 'ユーザー',
-      email: (m as any).email || m.user?.email || '',
-      role: (m.role as any) || 'member',
+      name: m.user?.name || m.user?.email || 'ユーザー',
+      email: m.user?.email || '',
+      role: (m.role as unknown as 'admin' | 'member') || 'member',
       avatar: undefined,
-      joinedAt: (m as any).joinedAt || new Date().toISOString(),
+      joinedAt: m.joinedAt || new Date().toISOString(),
     }));
   }, [groupMembers]);
 
@@ -1110,7 +1112,7 @@ export default function App() {
               // グループ解除後は個人メモを再読込
               const memosRes = await apiClient.getMemos();
               if (memosRes.success && memosRes.data) {
-                setMemos(memosRes.data as any);
+                setMemos(memosRes.data as Memo[]);
               }
             }
           } else {
@@ -1123,7 +1125,7 @@ export default function App() {
         open={isMemberManagementDialogOpen} 
         onOpenChange={setMemberManagementDialogOpen}
         groupId={selectedGroupId || ''}
-        members={membersForDialogs as any}
+        members={membersForDialogs}
         onInviteMember={async (email, role) => {
           if (!selectedGroupId) throw new Error('グループ未選択です');
           const res = await apiClient.inviteMember(selectedGroupId, { email, role });
@@ -1157,7 +1159,7 @@ export default function App() {
         searchQuery={searchQuery}
         results={filteredAndSortedMemos}
         onSearch={setSearchQuery}
-        onSelectResult={(result) => setSelectedMemo(result as any)}
+        onSelectResult={(result) => setSelectedMemo(result as Memo)}
       />
 
       <ExportImportDialog 
