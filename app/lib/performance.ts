@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 // デバウンス関数
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -14,7 +14,7 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // スロットル関数
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -49,7 +49,7 @@ export function useDebounce<T>(value: T, delay: number): T {
 }
 
 // スロットルHook
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T {
@@ -120,7 +120,7 @@ export function useMemoryMonitor() {
   useEffect(() => {
     const updateMemoryInfo = () => {
       if ('memory' in performance) {
-        const memory = (performance as any).memory
+        const memory = (performance as unknown as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory
         setMemoryInfo({
           usedJSHeapSize: memory.usedJSHeapSize,
           totalJSHeapSize: memory.totalJSHeapSize,
@@ -225,16 +225,16 @@ export class MemoryCache<K, V> {
 }
 
 // グローバルキャッシュインスタンス
-export const globalCache = new MemoryCache<string, any>(200, 10 * 60 * 1000) // 10分TTL
+export const globalCache = new MemoryCache<string, unknown>(200, 10 * 60 * 1000) // 10分TTL
 
 // リクエスト重複排除
 export class RequestDeduplicator {
-  private pendingRequests = new Map<string, Promise<any>>()
+  private pendingRequests = new Map<string, Promise<unknown>>()
 
   async execute<T>(key: string, requestFn: () => Promise<T>): Promise<T> {
     // 既に同じリクエストが実行中の場合は、そのPromiseを返す
     if (this.pendingRequests.has(key)) {
-      return this.pendingRequests.get(key)!
+      return this.pendingRequests.get(key)! as Promise<T>
     }
 
     // 新しいリクエストを実行
@@ -244,8 +244,8 @@ export class RequestDeduplicator {
         this.pendingRequests.delete(key)
       })
 
-    this.pendingRequests.set(key, promise)
-    return promise
+    this.pendingRequests.set(key, promise as Promise<unknown>)
+    return promise as Promise<T>
   }
 
   clear(): void {
@@ -357,7 +357,7 @@ class PerformanceMonitor {
     }
   }
 
-  logError(type: string, details: any) {
+  logError(type: string, details: unknown) {
     if (process.env.NODE_ENV === 'production') {
       console.error(`[Error] ${type}:`, details);
       
@@ -410,7 +410,7 @@ export function withPerformanceMonitoring<T>(
  */
 export function createErrorBoundary() {
   return {
-    onError: (error: Error, errorInfo: any) => {
+    onError: (error: Error, errorInfo: unknown) => {
       if (process.env.NODE_ENV === 'production') {
         console.error('React Error Boundary caught an error:', error, errorInfo);
         // 実際の本番環境では、Error Trackingサービスに送信
@@ -427,7 +427,7 @@ export function createErrorBoundary() {
  */
 export function monitorMemoryUsage() {
   if (typeof window !== 'undefined' && 'memory' in performance) {
-    const memory = (performance as any).memory;
+    const memory = (performance as unknown as { memory: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
     return {
       usedJSHeapSize: memory.usedJSHeapSize,
       totalJSHeapSize: memory.totalJSHeapSize,
@@ -442,7 +442,7 @@ export function monitorMemoryUsage() {
  */
 export function monitorNetworkStatus() {
   if (typeof navigator !== 'undefined' && 'connection' in navigator) {
-    const connection = (navigator as any).connection;
+    const connection = (navigator as unknown as { connection: { effectiveType: string; downlink: number; rtt: number; saveData: boolean } }).connection;
     return {
       effectiveType: connection.effectiveType,
       downlink: connection.downlink,
