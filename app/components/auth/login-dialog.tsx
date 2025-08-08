@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,10 +15,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs'
-import { useAuth } from '@/lib/auth-context'
-import { validators } from '@/lib/security'
 import { Loader2 } from 'lucide-react'
-import { useAppNotifications } from '@/components/notification/notification-provider'
+import { useAuthForms } from '@/lib/use-auth-forms'
 
 interface LoginDialogProps {
   open: boolean
@@ -26,120 +24,16 @@ interface LoginDialogProps {
 }
 
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
-  const { signInWithEmail, signUpWithEmail } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const notify = useAppNotifications()
-
-  // ログインフォームの状態
-  const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: ''
-  })
-
-  // サインアップフォームの状態
-  const [signUpForm, setSignUpForm] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  })
-
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setErrors({})
-
-    // バリデーション
-    const emailValidation = validators.email(loginForm.email)
-    if (!emailValidation.valid) {
-      setErrors({ email: emailValidation.error! })
-      setIsLoading(false)
-      return
-    }
-
-    if (!loginForm.password) {
-      setErrors({ password: 'パスワードを入力してください' })
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const { error } = await signInWithEmail(loginForm.email, loginForm.password)
-      if (error) {
-        setErrors({ general: 'ログインに失敗しました。メールアドレスまたはパスワードを確認してください。' })
-      } else {
-        onOpenChange(false)
-        setLoginForm({ email: '', password: '' })
-        notify.success('ログインしました')
-      }
-    } catch (error: any) {
-      console.error('ログインエラー:', error)
-      setErrors({ general: 'ログインに失敗しました。' })
-      notify.error('ログインに失敗しました', error.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleEmailSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setErrors({})
-
-    // バリデーション
-    const emailValidation = validators.email(signUpForm.email)
-    if (!emailValidation.valid) {
-      setErrors({ email: emailValidation.error! })
-      setIsLoading(false)
-      return
-    }
-
-    const usernameValidation = validators.username(signUpForm.username)
-    if (!usernameValidation.valid) {
-      setErrors({ username: usernameValidation.error! })
-      setIsLoading(false)
-      return
-    }
-
-    if (signUpForm.password.length < 8) {
-      setErrors({ password: 'パスワードは8文字以上で入力してください' })
-      setIsLoading(false)
-      return
-    }
-
-    // パスワード強度チェック
-    const passwordValidation = validators.password(signUpForm.password)
-    if (!passwordValidation.valid) {
-      setErrors({ password: passwordValidation.error! })
-      setIsLoading(false)
-      return
-    }
-
-    if (signUpForm.password !== signUpForm.confirmPassword) {
-      setErrors({ confirmPassword: 'パスワードが一致しません' })
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const { error } = await signUpWithEmail(signUpForm.email, signUpForm.password, signUpForm.username)
-      if (error) {
-        setErrors({ general: 'アカウント作成に失敗しました: ' + error.message })
-      } else {
-        // サインアップ成功時はダイアログを閉じる
-        onOpenChange(false)
-        setSignUpForm({ username: '', email: '', password: '', confirmPassword: '' })
-        notify.success('アカウントを作成しました')
-      }
-    } catch (error: any) {
-      console.error('サインアップエラー:', error)
-      setErrors({ general: 'アカウント作成に失敗しました。' })
-      notify.error('アカウント作成に失敗しました', error.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const {
+    isLoading,
+    errors,
+    loginForm,
+    setLoginForm,
+    signUpForm,
+    setSignUpForm,
+    handleEmailLogin,
+    handleEmailSignUp,
+  } = useAuthForms()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -158,7 +52,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           </TabsList>
           
           <TabsContent value="login" className="space-y-4">
-            <form onSubmit={handleEmailLogin} className="space-y-4">
+            <form onSubmit={async (e) => { const ok = await handleEmailLogin(e); if (ok) onOpenChange(false) }} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="login-email">メールアドレス</Label>
                 <Input
@@ -201,7 +95,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           </TabsContent>
           
           <TabsContent value="signup" className="space-y-4">
-            <form onSubmit={handleEmailSignUp} className="space-y-4">
+            <form onSubmit={async (e) => { const ok = await handleEmailSignUp(e); if (ok) onOpenChange(false) }} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-username">ユーザー名</Label>
                 <Input

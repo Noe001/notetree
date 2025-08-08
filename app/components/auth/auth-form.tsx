@@ -2,130 +2,24 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/lib/auth-context'
-import { validators } from '@/lib/security'
 import { Loader2 } from 'lucide-react'
 import { useAppNotifications } from '@/components/notification/notification-provider'
+import { useAuthForms } from '@/lib/use-auth-forms'
 
 export function AuthForm() {
-  const { signInWithEmail, signUpWithEmail } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
   const [activeTab, setActiveTab] = useState('login')
   const notify = useAppNotifications()
-
-  // ログインフォームの状態
-  const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: ''
-  })
-
-  // サインアップフォームの状態
-  const [signUpForm, setSignUpForm] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  })
-
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setErrors({})
-
-    // バリデーション
-    const emailValidation = validators.email(loginForm.email)
-    if (!emailValidation.valid) {
-      setErrors({ email: emailValidation.error! })
-      setIsLoading(false)
-      return
-    }
-
-    if (!loginForm.password) {
-      setErrors({ password: 'パスワードを入力してください' })
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const { error } = await signInWithEmail(loginForm.email, loginForm.password)
-      if (error) {
-        setErrors({ general: 'ログインに失敗しました。メールアドレスまたはパスワードを確認してください。' })
-      } else {
-        setLoginForm({ email: '', password: '' })
-        notify.success('ログインしました')
-      }
-    } catch (error: any) {
-      console.error('ログインエラー:', error)
-      setErrors({ general: 'ログインに失敗しました。' })
-      notify.error('ログインに失敗しました', error.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleEmailSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setErrors({})
-    console.log('handleEmailSignUp: start', { form: signUpForm })
-
-    // バリデーション
-    const emailValidation = validators.email(signUpForm.email)
-    if (!emailValidation.valid) {
-      setErrors({ email: emailValidation.error! })
-      setIsLoading(false)
-      return
-    }
-
-    const usernameValidation = validators.username(signUpForm.username)
-    if (!usernameValidation.valid) {
-      setErrors({ username: usernameValidation.error! })
-      setIsLoading(false)
-      return
-    }
-
-    if (signUpForm.password.length < 8) {
-      setErrors({ password: 'パスワードは8文字以上で入力してください' })
-      setIsLoading(false)
-      return
-    }
-
-    // パスワード強度チェック
-    const passwordValidation = validators.password(signUpForm.password)
-    if (!passwordValidation.valid) {
-      setErrors({ password: passwordValidation.error! })
-      setIsLoading(false)
-      return
-    }
-
-    if (signUpForm.password !== signUpForm.confirmPassword) {
-      setErrors({ confirmPassword: 'パスワードが一致しません' })
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const { error } = await signUpWithEmail(signUpForm.email, signUpForm.password, signUpForm.username)
-      if (error) {
-        console.error('handleEmailSignUp: API returned error', error)
-        setErrors({ general: 'アカウント作成に失敗しました: ' + error.message })
-      } else {
-        console.log('handleEmailSignUp: success')
-        setErrors({ success: 'アカウントが作成されました。ログインしてください。' })
-        notify.success('アカウントを作成しました')
-        setSignUpForm({ username: '', email: '', password: '', confirmPassword: '' })
-        // サインアップ成功時はログインタブに切り替え
-        setActiveTab('login')
-      }
-    } catch (error: any) {
-      console.error('サインアップエラー:', error)
-      setErrors({ general: 'アカウント作成に失敗しました。' })
-      notify.error('アカウント作成に失敗しました', error.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const {
+    isLoading,
+    errors,
+    setErrors,
+    loginForm,
+    setLoginForm,
+    signUpForm,
+    setSignUpForm,
+    handleEmailLogin,
+    handleEmailSignUp,
+  } = useAuthForms()
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -141,7 +35,6 @@ export function AuthForm() {
         <div className="grid w-full grid-cols-2 gap-1 p-1 bg-muted rounded-md">
           <button
             onClick={() => {
-              console.log('ログインタブをクリック');
               setActiveTab('login');
             }}
             className={`px-3 py-2 text-sm font-medium rounded-sm transition-colors ${
@@ -154,7 +47,6 @@ export function AuthForm() {
           </button>
           <button
             onClick={() => {
-              console.log('サインアップタブをクリック');
               setActiveTab('signup');
             }}
             className={`px-3 py-2 text-sm font-medium rounded-sm transition-colors ${

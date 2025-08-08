@@ -43,7 +43,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       if (response.ok && data.success && data.data) {
-        console.log('fetchUser: response.ok:', response.ok, 'data.user:', data.data);
         const fetchedUser: User = {
           id: data.data.id,
           email: data.data.email,
@@ -54,7 +53,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(fetchedUser);
         setSession({ user: fetchedUser });
       } else {
-        console.log('fetchUser: response.ok:', response.ok, 'data:', data, 'Setting user/session to null.');
         setUser(null);
         setSession(null);
       }

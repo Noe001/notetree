@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log('Signup: creating user');
     const user = await prisma.user.create({
       data: {
         email,
@@ -41,7 +40,6 @@ export async function POST(req: NextRequest) {
 
     // JWTの生成
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
-    console.log('Signup: token issued for', user.id);
 
     // HTTP Only CookieにJWTを設定
     const response = NextResponse.json({ message: 'User registered successfully', user });
