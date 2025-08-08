@@ -48,10 +48,11 @@ export function MemoDeleteDialog({
       await onDeleteMemo(memo.id)
       notify.success('削除しました', 'メモを削除しました')
       onOpenChange(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('メモ削除エラー:', error)
-      setError(error.message || 'メモの削除に失敗しました')
-      notify.error('削除に失敗しました', error.message || 'メモの削除に失敗しました')
+      const message = error instanceof Error ? error.message : 'メモの削除に失敗しました'
+      setError(message)
+      notify.error('削除に失敗しました', message)
     } finally {
       setLoading(false)
     }
