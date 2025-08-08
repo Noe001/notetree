@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 
 interface VirtualListProps<T> {
   items: T[]
@@ -176,7 +176,7 @@ export function InfiniteScroll<T>({
     // ローディング中の場合は、プレースホルダーを追加
     if (loading || isLoadingMore) {
       for (let i = 0; i < 3; i++) {
-        result.push(null as any) // プレースホルダー
+        result.push(null as unknown as T) // プレースホルダー
       }
     }
     

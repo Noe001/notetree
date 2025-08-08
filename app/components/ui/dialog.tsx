@@ -30,7 +30,7 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
     <div className="dialog-root">
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, { open, onOpenChange } as any)
+          return React.cloneElement(child as React.ReactElement<{ open?: boolean; onOpenChange?: (open: boolean) => void }>, { open, onOpenChange })
         }
         return child
       })}

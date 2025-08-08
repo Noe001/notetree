@@ -9,10 +9,10 @@ export function useWebSocket() {
   const { user, loading } = useAuth();
   const ws = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [lastMessage, setLastMessage] = useState<WebSocketMessage<any, any> | null>(null);
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage<string, unknown> | null>(null);
   const [error, setError] = useState<Event | null>(null);
 
-  const sendMessage = useCallback((message: WebSocketMessage<any, any>) => {
+  const sendMessage = useCallback((message: WebSocketMessage<string, unknown>) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify(message));
     } else {

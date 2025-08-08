@@ -85,7 +85,7 @@ export interface SearchResult extends Memo {
 
 export interface RealtimeMessage {
   type: 'memo_update' | 'memo_create' | 'group_chat';
-  payload: any;
+  payload: unknown;
   senderId: string;
   groupId?: string;
 }

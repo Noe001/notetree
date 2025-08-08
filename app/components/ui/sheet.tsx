@@ -28,9 +28,11 @@ interface SheetPortalProps {
 }
 
 const SheetPortal = ({ children }: SheetPortalProps) => {
-  return typeof document !== "undefined"
-    ? require("react-dom").createPortal(children, document.body)
-    : null
+  if (typeof document === 'undefined') return null
+  // dynamic import to avoid require rule
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const ReactDOM = require('react-dom') as typeof import('react-dom')
+  return ReactDOM.createPortal(children, document.body)
 }
 
 const SheetOverlay = React.forwardRef<

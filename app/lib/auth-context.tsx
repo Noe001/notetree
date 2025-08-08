@@ -97,9 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ログイン成功後、ユーザー情報を再フェッチ
       await fetchUser();
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ログインエラー:', error);
-      return { error: { message: error.message || 'ログインに失敗しました' } };
+      const message = error instanceof Error ? error.message : 'ログインに失敗しました';
+      return { error: { message } };
     } finally {
       setLoading(false);
     }
@@ -137,9 +138,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // サインアップ成功後、ユーザー情報を再フェッチ
       await fetchUser();
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('サインアップエラー:', error);
-      return { error: { message: error.message || 'アカウント作成に失敗しました' } };
+      const message = error instanceof Error ? error.message : 'アカウント作成に失敗しました';
+      return { error: { message } };
     } finally {
       setLoading(false);
     }
@@ -160,9 +162,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('ログアウトエラー:', error);
-      return { error: { message: error.message || 'ログアウトに失敗しました' } };
+      const message = error instanceof Error ? error.message : 'ログアウトに失敗しました';
+      return { error: { message } };
     } finally {
       setLoading(false);
     }
