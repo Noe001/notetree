@@ -3,6 +3,7 @@ export const runtime = 'nodejs'; // RuntimeをNode.jsに設定
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthenticatedUserFromRequest } from '@/lib/auth';
+import type { Prisma } from '@prisma/client';
 
 export async function GET(req: NextRequest, { params }: any) {
   try {
@@ -119,7 +120,7 @@ export async function PATCH(req: NextRequest, { params }: any) {
     const updatedData: { [key: string]: any } = {};
     if (title !== undefined) updatedData.title = title;
     if (content !== undefined) updatedData.content = content;
-    if (tags !== undefined) updatedData.tags = tags; // Prisma Json 型にそのまま代入
+    if (tags !== undefined) updatedData.tags = tags as unknown as Prisma.InputJsonValue;
     if (isPrivate !== undefined) updatedData.isPrivate = isPrivate;
     if (groupId !== undefined) {
       updatedData.group = groupId ? { connect: { id: groupId } } : { disconnect: true };

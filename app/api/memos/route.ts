@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthenticatedUserFromRequest } from '@/lib/auth';
 import { CreateMemoDto, Memo } from '@/lib/api';
+import type { Prisma } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
         isPrivate,
         authorId: user.id,
         groupId,
-        tags: tags || [],
+        tags: (tags as unknown as Prisma.InputJsonValue) || ([] as unknown as Prisma.InputJsonValue),
       },
     });
 
