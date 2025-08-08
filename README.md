@@ -230,6 +230,10 @@ npm run test:production-api
 - **セキュリティヘッダー**: 各種セキュリティヘッダーの設定
 - **パスワード強度検証**: 強力なパスワードの要求
 
+### 内部APIトークンの運用
+
+WebSocket サーバー → Next.js API の内部呼び出しには、ヘッダ `x-internal-api-token` と委譲ユーザーID `x-user-id` を使用します。トークンは `.env` の `INTERNAL_API_TOKEN` に安全な乱数で設定し、定期的にローテーションしてください。
+
 ## テスト
 
 ### ユニットテスト

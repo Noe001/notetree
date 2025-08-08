@@ -156,10 +156,9 @@ async function handleWebSocketMessage(ws: AuthenticatedWebSocket, message: WebSo
           method: method,
           headers: {
             'Content-Type': 'application/json',
-            // WebSocket経由でのAPI呼び出しの場合、認証が必要な場合は別途考慮
-            // 例えば、内部APIキーやサービスアカウントトークンなど
-            'X-User-Id': ws.userId || '', // 例としてユーザーIDをヘッダーに含める
-            ...(INTERNAL_API_TOKEN ? { 'X-Internal-Api-Token': INTERNAL_API_TOKEN } : {}),
+            // サービス間認証 + 委譲ユーザーID
+            'x-user-id': ws.userId || '',
+            ...(INTERNAL_API_TOKEN ? { 'x-internal-api-token': INTERNAL_API_TOKEN } : {}),
           },
           body: method !== 'DELETE' ? JSON.stringify(message.payload) : undefined,
         });

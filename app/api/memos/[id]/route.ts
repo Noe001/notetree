@@ -1,175 +1,118 @@
-export const runtime = 'nodejs'; // RuntimeをNode.jsに設定
+export const runtime = 'nodejs'
 
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { getAuthenticatedUserFromRequest } from '@/lib/auth';
-import type { Prisma } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+import { getAuthenticatedUserFromRequest } from '@/lib/auth'
+import type { Prisma } from '@prisma/client'
 
-export async function GET(req: NextRequest, { params }: any) {
+function toMemoResponse(memo: any) {
+  return {
+    ...memo,
+    createdAt: memo.createdAt.toISOString(),
+    updatedAt: memo.updatedAt.toISOString(),
+    tags: (memo as any).tags as string[]
+  }
+}
+
+async function canReadMemo(userId: string, memo: { authorId: string; groupId: string | null }) {
+  if (!memo.groupId) return memo.authorId === userId
+  const group = await prisma.group.findUnique({ where: { id: memo.groupId } })
+  if (!group) return false
+  if (group.ownerId === userId) return true
+  const isMember = await prisma.groupMember.findFirst({ where: { groupId: memo.groupId, userId } })
+  return !!isMember
+}
+
+async function canModifyMemo(userId: string, memo: { authorId: string; groupId: string | null }) {
+  if (memo.authorId === userId) return true
+  if (memo.groupId) {
+    const group = await prisma.group.findUnique({ where: { id: memo.groupId } })
+    if (group && group.ownerId === userId) return true
+  }
+  return false
+}
+
+export async function GET(_req: NextRequest, context: any) {
   try {
-    const user = await getAuthenticatedUserFromRequest();
+    const user = await getAuthenticatedUserFromRequest()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params;
-    const memo = await prisma.memo.findUnique({
-      where: { id },
-      include: { author: { select: { id: true, email: true, name: true } }, group: true },
-    });
-
+    const memoId = context?.params?.id as string
+    const memo = await prisma.memo.findUnique({ where: { id: memoId } })
     if (!memo) {
-      return NextResponse.json({ error: 'Memo not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Not Found' }, { status: 404 })
     }
 
-    // 権限チェック：メモの作成者であるか、またはグループに属しているか
-    if (memo.authorId !== user.id && !(memo.groupId && await prisma.groupMember.findFirst({ where: { groupId: memo.groupId, userId: user.id } }))) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const permitted = await canReadMemo(user.id, { authorId: memo.authorId, groupId: memo.groupId })
+    if (!permitted) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
-    const processedMemo = {
-      ...memo,
-      createdAt: memo.createdAt.toISOString(),
-      updatedAt: memo.updatedAt.toISOString(),
-      // Prisma Json 型をそのまま返す
-      tags: (memo as any).tags as string[],
-    };
-    return NextResponse.json({ success: true, data: processedMemo });
+    return NextResponse.json({ success: true, data: toMemoResponse(memo) })
   } catch (error: any) {
-    console.error('Error fetching memo:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+    console.error('Error fetching memo:', error)
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 })
   }
 }
 
-export async function PUT(req: NextRequest, { params }: any) {
+export async function PATCH(req: NextRequest, context: any) {
   try {
-    const user = await getAuthenticatedUserFromRequest();
+    const user = await getAuthenticatedUserFromRequest()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params;
-    const { title, content, groupId } = await req.json();
-    console.log('PUT /api/memos/[id]: id=', id, 'body=', { title, content, groupId });
-
-    if (!title && !content && !groupId) {
-      return NextResponse.json({ error: 'No fields to update provided' }, { status: 400 });
+    const memoId = context?.params?.id as string
+    const memo = await prisma.memo.findUnique({ where: { id: memoId } })
+    if (!memo) {
+      return NextResponse.json({ success: false, error: 'Not Found' }, { status: 404 })
     }
 
-    const existingMemo = await prisma.memo.findUnique({ where: { id } });
-    if (!existingMemo) {
-      return NextResponse.json({ error: 'Memo not found' }, { status: 404 });
+    const permitted = await canModifyMemo(user.id, { authorId: memo.authorId, groupId: memo.groupId })
+    if (!permitted) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
-    // 権限チェック：メモの作成者であること
-    if (existingMemo.authorId !== user.id) {
-      return NextResponse.json({ error: 'Forbidden: Only memo author can update' }, { status: 403 });
-    }
+    const body = await req.json()
+    const updates: any = {}
+    if (typeof body.title === 'string') updates.title = body.title
+    if (typeof body.content === 'string') updates.content = body.content
+    if (Array.isArray(body.tags)) updates.tags = body.tags as unknown as Prisma.InputJsonValue
+    if (typeof body.isPrivate === 'boolean') updates.isPrivate = body.isPrivate
 
-    const updatedMemo = await prisma.memo.update({
-      where: { id },
-      data: {
-        ...(title && { title }),
-        ...(content && { content }),
-        ...(groupId !== undefined && { // groupIdがnullの場合も更新可能にする
-          group: groupId ? { connect: { id: groupId } } : { disconnect: true }
-        }),
-      },
-    });
-
-    const responseData = {
-      ...updatedMemo,
-      createdAt: updatedMemo.createdAt.toISOString(),
-      updatedAt: updatedMemo.updatedAt.toISOString(),
-      tags: (updatedMemo as any).tags as string[],
-    };
-    return NextResponse.json({ success: true, data: responseData });
+    const updated = await prisma.memo.update({ where: { id: memoId }, data: updates })
+    return NextResponse.json({ success: true, data: toMemoResponse(updated) })
   } catch (error: any) {
-    console.error('Error updating memo:', error);
-    console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+    console.error('Error updating memo:', error)
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 })
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: any) {
+export async function DELETE(_req: NextRequest, context: any) {
   try {
-    const user = await getAuthenticatedUserFromRequest();
+    const user = await getAuthenticatedUserFromRequest()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params;
-    const { title, content, tags, isPrivate, groupId } = await req.json();
-    console.log('PATCH /api/memos/[id]: id=', id, 'body=', { title, content, tags, isPrivate, groupId });
-
-    // 更新されるフィールドが1つもない場合はエラーを返す
-    if (title === undefined && content === undefined && tags === undefined && isPrivate === undefined && groupId === undefined) {
-      return NextResponse.json({ error: 'No fields to update provided' }, { status: 400 });
+    const memoId = context?.params?.id as string
+    const memo = await prisma.memo.findUnique({ where: { id: memoId } })
+    if (!memo) {
+      return NextResponse.json({ success: false, error: 'Not Found' }, { status: 404 })
     }
 
-    const existingMemo = await prisma.memo.findUnique({ where: { id } });
-    if (!existingMemo) {
-      return NextResponse.json({ error: 'Memo not found' }, { status: 404 });
+    const permitted = await canModifyMemo(user.id, { authorId: memo.authorId, groupId: memo.groupId })
+    if (!permitted) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
-    // 権限チェック：メモの作成者であること
-    if (existingMemo.authorId !== user.id) {
-      return NextResponse.json({ error: 'Forbidden: Only memo author can update' }, { status: 403 });
-    }
-
-    const updatedData: { [key: string]: any } = {};
-    if (title !== undefined) updatedData.title = title;
-    if (content !== undefined) updatedData.content = content;
-    if (tags !== undefined) updatedData.tags = tags as unknown as Prisma.InputJsonValue;
-    if (isPrivate !== undefined) updatedData.isPrivate = isPrivate;
-    if (groupId !== undefined) {
-      updatedData.group = groupId ? { connect: { id: groupId } } : { disconnect: true };
-    }
-
-    const updatedMemo = await prisma.memo.update({
-      where: { id },
-      data: updatedData,
-      include: { author: { select: { id: true, email: true, name: true } }, group: true }, // 更新されたメモを返す際にauthorとgroupを含める
-    });
-
-    const responseData = {
-      ...updatedMemo,
-      createdAt: updatedMemo.createdAt.toISOString(),
-      updatedAt: updatedMemo.updatedAt.toISOString(),
-      tags: (updatedMemo as any).tags as string[],
-    };
-
-    return NextResponse.json({ success: true, data: responseData });
+    await prisma.memo.delete({ where: { id: memoId } })
+    return NextResponse.json({ success: true, data: null }, { status: 204 })
   } catch (error: any) {
-    console.error('Error patching memo:', error);
-    console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+    console.error('Error deleting memo:', error)
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 })
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: any) {
-  try {
-    const user = await getAuthenticatedUserFromRequest();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = params;
-    const existingMemo = await prisma.memo.findUnique({ where: { id } });
-    if (!existingMemo) {
-      return NextResponse.json({ error: 'Memo not found' }, { status: 404 });
-    }
-
-    // 権限チェック：メモの作成者であること
-    if (existingMemo.authorId !== user.id) {
-      return NextResponse.json({ error: 'Forbidden: Only memo author can delete' }, { status: 403 });
-    }
-
-    await prisma.memo.delete({ where: { id } });
-
-    return NextResponse.json({ success: true, data: null });
-  } catch (error: any) {
-    console.error('Error deleting memo:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
-  }
-}

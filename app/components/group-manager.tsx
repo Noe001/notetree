@@ -12,6 +12,7 @@ import { useGroups, useInvitations, useUserSearch } from '@/hooks/useApi';
 import { Group, GroupMember, Invitation } from '@/lib/api';
 import { JoinGroupDialog } from './group/join-group-dialog';
 import { CreateGroupDialog } from './group/create-group-dialog';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface GroupManagerProps {
   currentUserId: string;
@@ -29,6 +30,7 @@ export function GroupManager({ currentUserId, selectedGroupId, onGroupSelect }: 
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [lastInvite, setLastInvite] = useState<{ email: string; token: string } | null>(null);
+  const [deleteTargetGroupId, setDeleteTargetGroupId] = useState<string | null>(null);
 
   const { invitations, fetchInvitations, sendInvitation } = useInvitations(selectedGroup?.id || '');
   const { query: searchQuery, results: searchResults, loading: searchLoading, search: searchUsers, clearSearch } = useUserSearch();
@@ -76,17 +78,7 @@ export function GroupManager({ currentUserId, selectedGroupId, onGroupSelect }: 
   };
 
   const handleDeleteGroup = async (groupId: string) => {
-    if (!confirm('このグループを削除してもよろしいですか？')) return;
-
-    try {
-      setActionLoading(true);
-      setActionError(null);
-      await deleteGroup(groupId);
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : 'グループの削除に失敗しました');
-    } finally {
-      setActionLoading(false);
-    }
+    setDeleteTargetGroupId(groupId);
   };
 
   const handleSendInvitation = async () => {
@@ -434,6 +426,28 @@ export function GroupManager({ currentUserId, selectedGroupId, onGroupSelect }: 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* グループ削除の確認ダイアログ */}
+      <ConfirmDialog
+        open={!!deleteTargetGroupId}
+        title="グループ削除の確認"
+        message="このグループを削除してもよろしいですか？この操作は取り消せません。"
+        confirmText="削除する"
+        onOpenChange={(o) => { if (!o) setDeleteTargetGroupId(null) }}
+        onConfirm={async () => {
+          if (!deleteTargetGroupId) return;
+          try {
+            setActionLoading(true);
+            setActionError(null);
+            await deleteGroup(deleteTargetGroupId);
+          } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'グループの削除に失敗しました');
+          } finally {
+            setActionLoading(false);
+            setDeleteTargetGroupId(null);
+          }
+        }}
+      />
     </div>
   );
 }

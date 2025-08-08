@@ -27,6 +27,8 @@ import {
   Trash2,
   AlertTriangle
 } from 'lucide-react'
+import { useAppNotifications } from '@/components/notification/notification-provider'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 interface GroupMember {
   id: string
@@ -74,6 +76,7 @@ export function GroupSettingsDialog({
 }: GroupSettingsDialogProps) {
   const [activeTab, setActiveTab] = useState<'general' | 'members' | 'permissions' | 'danger'>('general')
   const [loading, setLoading] = useState(false)
+  const notify = useAppNotifications()
   
   // グループ設定
   const [groupName, setGroupName] = useState('')
@@ -86,6 +89,7 @@ export function GroupSettingsDialog({
   
   // 削除確認
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [removeTargetMemberId, setRemoveTargetMemberId] = useState<string | null>(null)
 
   useEffect(() => {
     if (group && open) {
@@ -109,10 +113,10 @@ export function GroupSettingsDialog({
         description: groupDescription.trim(),
         isPrivate
       })
-      alert('グループ設定を更新しました')
+      notify.success('グループ設定を更新しました')
     } catch (error) {
       console.error('グループ更新エラー:', error)
-      alert('グループの更新に失敗しました')
+      notify.error('グループの更新に失敗しました')
     } finally {
       setLoading(false)
     }
@@ -125,27 +129,18 @@ export function GroupSettingsDialog({
     try {
       await onInviteMember(group.id, inviteEmail.trim(), inviteRole)
       setInviteEmail('')
-      alert('招待を送信しました')
+      notify.success('招待を送信しました')
     } catch (error) {
       console.error('メンバー招待エラー:', error)
-      alert('招待の送信に失敗しました')
+      notify.error('招待の送信に失敗しました')
     } finally {
       setLoading(false)
     }
   }
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!group || !confirm('このメンバーをグループから削除しますか？')) return
-
-    setLoading(true)
-    try {
-      await onRemoveMember(group.id, memberId)
-    } catch (error) {
-      console.error('メンバー削除エラー:', error)
-      alert('メンバーの削除に失敗しました')
-    } finally {
-      setLoading(false)
-    }
+    if (!group) return
+    setRemoveTargetMemberId(memberId)
   }
 
   const handleDeleteGroup = async () => {
@@ -157,7 +152,7 @@ export function GroupSettingsDialog({
       onOpenChange(false)
     } catch (error) {
       console.error('グループ削除エラー:', error)
-      alert('グループの削除に失敗しました')
+      notify.error('グループの削除に失敗しました')
     } finally {
       setLoading(false)
     }
@@ -431,6 +426,29 @@ export function GroupSettingsDialog({
             閉じる
           </Button>
         </div>
+
+        {/* メンバー削除の確認ダイアログ */}
+        <ConfirmDialog
+          open={!!removeTargetMemberId}
+          title="メンバー削除の確認"
+          message="このメンバーをグループから削除しますか？"
+          confirmText="削除する"
+          onOpenChange={(o) => { if (!o) setRemoveTargetMemberId(null) }}
+          onConfirm={async () => {
+            if (!group || !removeTargetMemberId) return
+            setLoading(true)
+            try {
+              await onRemoveMember(group.id, removeTargetMemberId)
+              notify.success('メンバーを削除しました')
+            } catch (error) {
+              console.error('メンバー削除エラー:', error)
+              notify.error('メンバーの削除に失敗しました')
+            } finally {
+              setLoading(false)
+              setRemoveTargetMemberId(null)
+            }
+          }}
+        />
       </DialogContent>
     </Dialog>
   )

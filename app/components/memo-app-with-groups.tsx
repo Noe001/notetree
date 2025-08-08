@@ -21,6 +21,7 @@ import { GroupManager } from "@/components/group-manager";
 import { useMemos, useGroups } from "@/hooks/useApi";
 import { useAuth } from "@/lib/auth-context";
 import { CreateMemoDto } from "@/lib/api"; // CreateMemoDtoをlib/apiからインポート
+import { useAppNotifications } from "@/components/notification/notification-provider";
 
 // --- 型定義とユーティリティ ---
 const isValidDateString = (dateStr: string): boolean => {
@@ -191,6 +192,7 @@ const MemoListPanel = ({
 }: MemoListPanelProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { createMemo } = useMemos();
+  const notify = useAppNotifications();
 
   const handleCreateMemo = async (memoData: any) => {
     try {
@@ -204,7 +206,7 @@ const MemoListPanel = ({
       setShowCreateDialog(false);
     } catch (error) {
       console.error('メモ作成エラー:', error);
-      alert('メモの作成に失敗しました');
+      notify.error('メモの作成に失敗しました');
     }
   };
 

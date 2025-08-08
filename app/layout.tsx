@@ -8,7 +8,12 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'NoteTree',
-  description: 'Note-taking application with real-time collaboration features.',
+  description: 'ツリー型に整理できるノートアプリ',
+  applicationName: 'NoteTree',
+  icons: {
+    icon: [{ url: '/icon.png', type: 'image/png' }],
+    apple: [{ url: '/icon.png', type: 'image/png' }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
