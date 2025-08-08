@@ -78,6 +78,45 @@ export async function PUT(req: NextRequest, { params }: any) {
   }
 }
 
+export async function PATCH(req: NextRequest, { params }: any) {
+  // PUT と同等の更新（クライアント実装互換）
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = params;
+    const { name, description } = await req.json();
+
+    if (!name && !description) {
+      return NextResponse.json({ success: false, error: 'No fields to update provided' }, { status: 400 });
+    }
+
+    const existingGroup = await prisma.group.findUnique({ where: { id } });
+    if (!existingGroup) {
+      return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
+    }
+
+    if (existingGroup.ownerId !== user.id) {
+      return NextResponse.json({ success: false, error: 'Forbidden: Only group owner can update' }, { status: 403 });
+    }
+
+    const updatedGroup = await prisma.group.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(description && { description }),
+      },
+    });
+
+    return NextResponse.json({ success: true, data: updatedGroup });
+  } catch (error: any) {
+    console.error('Error updating group (PATCH):', error);
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest, { params }: any) {
   try {
     const user = await getAuthenticatedUser();

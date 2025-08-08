@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Settings, UserPlus, Mail, Crown, Shield, Trash2, Edit, X, LogIn } from 'lucide-react';
+import { Users, Plus, Settings, UserPlus, Mail, Crown, Shield, Trash2, Edit, X, LogIn, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,7 @@ export function GroupManager({ currentUserId, selectedGroupId, onGroupSelect }: 
   const [inviteData, setInviteData] = useState({ email: '', role: 'member' as 'admin' | 'member' });
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [lastInvite, setLastInvite] = useState<{ email: string; token: string } | null>(null);
 
   const { invitations, fetchInvitations, sendInvitation } = useInvitations(selectedGroup?.id || '');
   const { query: searchQuery, results: searchResults, loading: searchLoading, search: searchUsers, clearSearch } = useUserSearch();
@@ -94,12 +95,15 @@ export function GroupManager({ currentUserId, selectedGroupId, onGroupSelect }: 
     try {
       setActionLoading(true);
       setActionError(null);
-      await sendInvitation({
+      const created = await sendInvitation({
         email: inviteData.email,
         role: inviteData.role
       });
       setInviteData({ email: '', role: 'member' });
-      setShowInviteDialog(false);
+      if (created && (created as any).token) {
+        setLastInvite({ email: (created as any).email, token: (created as any).token });
+      }
+      fetchInvitations();
     } catch (error) {
       setActionError(error instanceof Error ? error.message : '招待の送信に失敗しました');
     } finally {
@@ -346,6 +350,74 @@ export function GroupManager({ currentUserId, selectedGroupId, onGroupSelect }: 
                 </SelectContent>
               </Select>
             </div>
+
+            {lastInvite && (
+              <div className="p-3 border rounded-md bg-muted/30">
+                <p className="text-sm mb-2">直近に発行した招待</p>
+                <div className="text-sm grid gap-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">メール</span>
+                    <span>{lastInvite.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">トークン</span>
+                    <code className="text-xs break-all">{lastInvite.token}</code>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="トークンをコピー"
+                      onClick={() => navigator.clipboard.writeText(lastInvite.token)}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {invitations && invitations.length > 0 && (
+              <div className="p-3 border rounded-md">
+                <p className="text-sm mb-2">未参加の招待一覧</p>
+                <div className="space-y-2 max-h-48 overflow-auto">
+                  {invitations.map((inv) => (
+                    <div key={(inv as any).id ?? (inv as any).token} className="text-xs flex items-center gap-2 justify-between">
+                      <span>{(inv as any).email}</span>
+                      <div className="flex items-center gap-1">
+                        <code className="truncate max-w-[140px]">{(inv as any).token}</code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="トークンをコピー"
+                          onClick={() => navigator.clipboard.writeText((inv as any).token)}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="招待を失効"
+                          onClick={async () => {
+                            if (!selectedGroup) return;
+                            try {
+                              setActionLoading(true);
+                              setActionError(null);
+                              await (await import('@/lib/api')).apiClient.revokeInvitation(selectedGroup.id, (inv as any).token);
+                              fetchInvitations();
+                            } catch (e) {
+                              setActionError(e instanceof Error ? e.message : '招待の失効に失敗しました');
+                            } finally {
+                              setActionLoading(false);
+                            }
+                          }}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           {actionError && (
             <Alert>

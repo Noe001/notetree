@@ -77,9 +77,11 @@ export function CreateGroupDialog({
             <Label htmlFor="groupName">グループ名 *</Label>
             <Input
               id="groupName"
+              data-testid="group-create-name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="グループ名を入力"
+              autoFocus
               disabled={loading}
             />
           </div>
@@ -88,6 +90,7 @@ export function CreateGroupDialog({
             <Label htmlFor="groupDescription">説明（任意）</Label>
             <Textarea
               id="groupDescription"
+              data-testid="group-create-description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="グループの説明を入力"
@@ -100,6 +103,7 @@ export function CreateGroupDialog({
             <input
               type="checkbox"
               id="isPrivate"
+              data-testid="group-create-private"
               checked={formData.isPrivate}
               onChange={(e) => setFormData(prev => ({ ...prev, isPrivate: e.target.checked }))}
               disabled={loading}
@@ -118,7 +122,7 @@ export function CreateGroupDialog({
             <Button type="button" variant="outline" onClick={handleCancel} disabled={loading}>
               キャンセル
             </Button>
-            <Button type="submit" disabled={loading || !formData.name.trim()}>
+            <Button type="submit" data-testid="group-create-submit" disabled={loading || !formData.name.trim()}>
               {loading ? '作成中...' : '作成'}
             </Button>
           </DialogFooter>

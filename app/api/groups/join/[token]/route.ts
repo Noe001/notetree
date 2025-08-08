@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, { params }: any) {
     });
 
     if (!invitation || invitation.expiresAt < new Date()) {
-      return NextResponse.json({ error: 'Invalid or expired invitation token' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Invalid or expired invitation token' }, { status: 400 });
     }
 
     // 既にグループのメンバーであるか確認
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: any) {
     if (existingMember) {
       // 既にメンバーの場合は招待を削除して成功を返す
       await prisma.invitation.delete({ where: { id: invitation.id } });
-      return NextResponse.json({ message: 'You are already a member of this group', group: invitation.group });
+      return NextResponse.json({ success: true, data: { group: invitation.group, alreadyMember: true } });
     }
 
     // グループメンバーとして追加
@@ -45,9 +45,9 @@ export async function POST(req: NextRequest, { params }: any) {
     // 招待を削除
     await prisma.invitation.delete({ where: { id: invitation.id } });
 
-    return NextResponse.json({ message: 'Successfully joined group', group: invitation.group });
+    return NextResponse.json({ success: true, data: { group: invitation.group, alreadyMember: false } });
   } catch (error: any) {
     console.error('Error joining group with token:', error);
-    return NextResponse.json({ error: error.message || 'Something went wrong' }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }

@@ -87,7 +87,9 @@ const RightSidebar = ({
   currentUserId: string;
   selectedGroupId?: string;
   onGroupSelect: (groupId: string) => void;
-}) => (
+}) => {
+  const { signOut } = useAuth();
+  return (
   <aside className={`${isOpen ? 'translate-x-0' : 'translate-x-full'} fixed right-0 top-0 h-full lg:flex-col border-l bg-background transition-transform duration-300 ease-in-out w-64 z-40`}>
     <div className="flex flex-col p-2 space-y-4 flex-1">
         <div className="flex items-center p-2">
@@ -117,7 +119,7 @@ const RightSidebar = ({
                 <HelpCircle className="w-4 h-4 mr-2" />
                 ヘルプ
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
+          <Button variant="ghost" className="w-full justify-start" onClick={() => signOut()}>
                 <LogOut className="w-4 h-4 mr-2" />
                 ログアウト
             </Button>
@@ -125,6 +127,7 @@ const RightSidebar = ({
     </div>
   </aside>
 );
+}
 
 // =================================================================
 // コンポーネント 3: メモ一覧の各アイテム

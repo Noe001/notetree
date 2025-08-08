@@ -1,3 +1,69 @@
+export const runtime = 'nodejs';
+
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/lib/auth';
+
+export async function PUT(req: NextRequest, { params }: any) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: groupId, memberId } = params;
+    const { role } = await req.json();
+
+    const group = await prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) {
+      return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
+    }
+
+    // オーナーのみロール更新可
+    if (group.ownerId !== user.id) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    const updated = await prisma.groupMember.update({
+      where: { id: memberId },
+      data: { role: (role || 'MEMBER').toUpperCase() },
+      include: { user: { select: { id: true, email: true, name: true } } },
+    });
+
+    return NextResponse.json({ success: true, data: updated });
+  } catch (error: any) {
+    console.error('Error updating member role:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: any) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: groupId, memberId } = params;
+
+    const group = await prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) {
+      return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
+    }
+
+    // オーナーのみ削除可
+    if (group.ownerId !== user.id) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    await prisma.groupMember.delete({ where: { id: memberId } });
+    return NextResponse.json({ success: true, data: null });
+  } catch (error: any) {
+    console.error('Error removing member:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+  }
+}
+
 export const runtime = 'nodejs'; // RuntimeをNode.jsに設定
 
 import { NextRequest, NextResponse } from 'next/server';

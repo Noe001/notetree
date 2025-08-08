@@ -279,6 +279,18 @@ class ApiClient {
     }
   }
 
+  async revokeInvitation(groupId: string, token: string): Promise<ApiResponse<void>> {
+    try {
+      return await this.request(`/api/groups/${groupId}/invitations/${token}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Failed to revoke invitation:', error);
+      notifyError('招待の失効に失敗しました', error instanceof Error ? error.message : undefined);
+      throw error;
+    }
+  }
+
   async searchUsers(query: string): Promise<ApiResponse<User[]>> {
     try {
       return await this.request(`/api/users/search?q=${query}`);
@@ -329,8 +341,9 @@ class ApiClient {
 
   async acceptInvitation(token: string): Promise<ApiResponse<void>> {
     try {
-      return await this.request(`/api/invitations/accept/${token}`, {
-          method: 'POST'
+      // サーバー実装: /api/groups/join/[token]
+      return await this.request(`/api/groups/join/${token}`, {
+        method: 'POST'
       });
     } catch (error) {
       console.error('Failed to accept invitation:', error);
@@ -354,7 +367,7 @@ class ApiClient {
   async joinGroupByGroupId(groupId: string): Promise<ApiResponse<GroupMember>> {
     try {
       return await this.request(`/api/groups/${groupId}/join`, {
-          method: 'POST'
+        method: 'POST'
       });
     } catch (error) {
       console.error('Failed to join group by id:', error);
@@ -365,8 +378,9 @@ class ApiClient {
 
   async joinGroupByInvitation(invitationToken: string): Promise<ApiResponse<GroupMember>> {
     try {
-      return await this.request(`/api/invitations/${invitationToken}/accept`, {
-          method: 'POST'
+      // サーバー実装に合わせる: /api/groups/join/[token]
+      return await this.request(`/api/groups/join/${invitationToken}`, {
+        method: 'POST'
       });
     } catch (error) {
       console.error('Failed to join group by invitation:', error);

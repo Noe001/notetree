@@ -64,3 +64,35 @@ export async function POST(req: NextRequest, { params }: any) {
     return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
   }
 }
+
+export async function GET(req: NextRequest, { params }: any) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: groupId } = params;
+
+    const group = await prisma.group.findUnique({
+      where: { id: groupId },
+      include: { members: true },
+    });
+
+    if (!group) {
+      return NextResponse.json({ success: false, error: 'Group not found' }, { status: 404 });
+    }
+
+    // 権限チェック：オーナーまたはメンバー
+    const isMember = group.members.some((m: any) => m.userId === user.id);
+    if (group.ownerId !== user.id && !isMember) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    const invitations = await prisma.invitation.findMany({ where: { groupId } });
+    return NextResponse.json({ success: true, data: invitations });
+  } catch (error: any) {
+    console.error('Error fetching invitations:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 });
+  }
+}
