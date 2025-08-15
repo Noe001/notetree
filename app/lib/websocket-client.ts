@@ -77,7 +77,7 @@ export function useWebSocket() {
 
       websocket.onmessage = (event) => {
         try {
-          const message: WebSocketMessage<unknown, unknown> = JSON.parse(event.data);
+          const message: WebSocketMessage<string, unknown> = JSON.parse(event.data);
           setLastMessage(message);
           logger.debug('Received message:', message);
         } catch (e) {

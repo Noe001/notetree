@@ -19,7 +19,7 @@ export interface GroupMemberUser {
   name: string | null;
 }
 
-export type GroupMemberRole = 'owner' | 'admin' | 'member';
+export type GroupMemberRole = 'admin' | 'owner' | 'editor' | 'viewer';
 
 export interface GroupMember {
   id: string;

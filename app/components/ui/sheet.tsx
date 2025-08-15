@@ -29,7 +29,7 @@ interface SheetPortalProps {
 
 const SheetPortal = ({ children }: SheetPortalProps) => {
   if (typeof document === 'undefined') return null
-  return (await import('react-dom')).createPortal(children, document.body)
+  return import("react-dom").then(ReactDOM => ReactDOM.createPortal(children, document.body))
 }
 
 const SheetOverlay = React.forwardRef<

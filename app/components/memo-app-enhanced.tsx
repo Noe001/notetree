@@ -58,10 +58,6 @@ const CURRENT_USER_ID = 'e87a6ec4-16b8-44c7-b339-604f62d9557c';
 const SidebarContent = ({ 
   onOpenSettings, 
   onOpenProfile,
-  // onOpenMemberManagement,
-  // onOpenSearchResults,
-  // onOpenExportImport,
-  // onOpenKeyboardShortcuts,
   onOpenCreateGroup,
   onOpenJoinGroup,
   groups,
@@ -70,10 +66,6 @@ const SidebarContent = ({
 }: { 
   onOpenSettings: () => void; 
   onOpenProfile: () => void;
-  // onOpenMemberManagement: () => void;
-  // onOpenSearchResults: () => void;
-  // onOpenExportImport: () => void;
-  // onOpenKeyboardShortcuts: () => void;
   onOpenCreateGroup: () => void;
   onOpenJoinGroup: () => void;
   groups: { id: string; name: string }[];
@@ -862,30 +854,10 @@ export default function App() {
       isPrivate: false,
       memberCount: groupMembers.length,
       createdAt: g.createdAt,
-      updatedAt: g.updatedAt,
     };
-  }, [groups, selectedGroupId, groupMembers.length]);
+  }, [groups, selectedGroupId, groupMembers]);
 
-  const membersForDialogs = useMemo(() => {
-    return groupMembers.map((m) => ({
-      id: m.id,
-      name: m.user?.name || m.user?.email || 'ユーザー',
-      email: m.user?.email || '',
-      role: (m.role as unknown as 'admin' | 'member') || 'member',
-      avatar: undefined,
-      joinedAt: m.joinedAt || new Date().toISOString(),
-    }));
-  }, [groupMembers]);
 
-  if (loading) {
-    return (
-      <div className="flex h-screen bg-background text-foreground items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">読み込み中...</p>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -956,22 +928,6 @@ export default function App() {
           <SidebarContent 
             onOpenSettings={handleOpenSettings} 
             onOpenProfile={handleOpenProfile}
-            onOpenMemberManagement={() => {
-              setSidebarOpen(false);
-              setTimeout(() => setMemberManagementDialogOpen(true), 150);
-            }}
-            onOpenSearchResults={() => {
-              setSidebarOpen(false);
-              setTimeout(() => setSearchResultsDialogOpen(true), 150);
-            }}
-            onOpenExportImport={() => {
-              setSidebarOpen(false);
-              setTimeout(() => setExportImportDialogOpen(true), 150);
-            }}
-            onOpenKeyboardShortcuts={() => {
-              setSidebarOpen(false);
-              setTimeout(() => setKeyboardShortcutsDialogOpen(true), 150);
-            }}
             onOpenCreateGroup={handleOpenCreateGroup}
             onOpenJoinGroup={handleOpenJoinGroup}
             groups={groups || []}
@@ -1183,3 +1139,6 @@ export default function App() {
     </div>
   );
 }
+
+
+
