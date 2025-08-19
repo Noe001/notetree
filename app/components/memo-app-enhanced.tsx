@@ -444,7 +444,7 @@ const PrivacyToggleButton = ({ isPrivate, onClick }: { isPrivate: boolean; onCli
 // =================================================================
 // メインのAppコンポーネント (全体の司令塔)
 // =================================================================
-export default function App() {
+export default function MemoAppEnhanced() {
   const { user } = useAuth();
   const [memos, setMemos] = useState<Memo[]>([]);
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null);
@@ -854,10 +854,42 @@ export default function App() {
       isPrivate: false,
       memberCount: groupMembers.length,
       createdAt: g.createdAt,
+      updatedAt: g.updatedAt,
     };
   }, [groups, selectedGroupId, groupMembers]);
 
+  const membersForDialogs = useMemo(() => {
+    if (!groupForDialog) return [];
+    return groupMembers.map(member => ({
+      id: member.id,
+      name: member.user.name || member.user.email,
+      email: member.user.email,
+      role: member.role === 'owner' ? 'owner' as const : member.role === 'admin' ? 'admin' as const : 'member' as const,
+      avatar: undefined,
+      joinedAt: member.joinedAt || new Date().toISOString()
+    }));
+  }, [groupForDialog, groupMembers]);
 
+  const membersForGroupSettings = useMemo(() => {
+    return groupMembers.map(member => ({
+      id: member.id,
+      name: member.user.name || member.user.email,
+      email: member.user.email,
+      avatar: undefined,
+      role: member.role,
+      joinedAt: member.joinedAt || new Date().toISOString()
+    }));
+  }, [groupMembers]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">読み込み中...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1015,11 +1047,11 @@ export default function App() {
       {/* MemoCreateDialogは削除された */}
 
       {/* グループダイアログ */}
-      <GroupSettingsDialog 
-        open={isGroupSettingsDialogOpen} 
-        onOpenChange={setGroupSettingsDialogOpen}
-        group={groupForDialog}
-        members={membersForDialogs}
+        <GroupSettingsDialog 
+          open={isGroupSettingsDialogOpen} 
+          onOpenChange={setGroupSettingsDialogOpen}
+          group={groupForDialog}
+          members={membersForGroupSettings}
         currentUserId={currentUser?.id || ''}
         onUpdateGroup={async (id, data) => {
           const res = await apiClient.updateGroup(id, data as Partial<Group>);
@@ -1139,6 +1171,4 @@ export default function App() {
     </div>
   );
 }
-
-
 
