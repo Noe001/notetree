@@ -1,115 +1,58 @@
 services:
   frontend:
     build:
-      context: ./frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    environment:
-      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-      - NEXT_PUBLIC_API_URL=http://localhost:3000
-      - WATCHPACK_POLLING=true
-      - FAST_REFRESH=true
-      - CHOKIDAR_USEPOLLING=true
-    depends_on:
-      backend:
-        condition: service_started
-      supabase-kong:
-        condition: service_started
-      db:
-        condition: service_healthy
-
-  backend:
-    build:
-      context: ./backend
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: ${DATABASE_URL}
     ports:
       - "3000:3000"
-      - "9229:9229" # For debugging
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-      - SUPABASE_URL=http://supabase-kong:8000
-      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.M5I029KMgBfIY5CiC4Gsv9PE9VBiTIMa_W3TJWtG7Mg
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_ENABLE_MOCK: ${NEXT_PUBLIC_ENABLE_MOCK}
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+    restart: always
+    command: sh -c "npx prisma migrate deploy && npm run start"
     depends_on:
       db:
         condition: service_healthy
 
-  db:
-    image: supabase/postgres:14.1.0
-    restart: always
+  websocket-server:
+    build:
+      context: ./websocket-server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-    volumes:
-      - supabase_db:/var/lib/postgresql/data
-      - ./supabase/migrations:/docker-entrypoint-initdb.d
+      WS_PORT: 3001
+      JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      API_URL: http://frontend:3000
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+    restart: always
+    depends_on:
+      - db
+      - frontend
+
+  db:
+    image: postgres:16-alpine
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  supabase-kong:
-    image: kong:latest
-    restart: always
-    environment:
-      - KONG_DATABASE=off
-      - KONG_DECLARATIVE_CONFIG=/etc/kong/kong.yml
-      - KONG_DNS_ORDER=LAST,A,CNAME
-      - KONG_PLUGINS=request-transformer,cors,key-auth
-    ports:
-      - "8000:8000"
-      - "8443:8443"
-      - "8001:8001"
-      - "8444:8444"
-    volumes:
-      - ./supabase/kong.yml:/etc/kong/kong.yml
-    depends_on:
-      supabase-auth:
-        condition: service_started
-      supabase-rest:
-        condition: service_started
-      db:
-        condition: service_healthy
-
-  supabase-auth:
-    image: supabase/gotrue:v2.5.3
-    restart: always
-    environment:
-      - GOTRUE_API_HOST=0.0.0.0
-      - GOTRUE_API_PORT=9999
-      - GOTRUE_DB_DRIVER=postgres
-      - GOTRUE_DB_DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-      - GOTRUE_JWT_SECRET=thisisareallylongandsecuresecret
-      - GOTRUE_SITE_URL=http://localhost:5173
-      - GOTRUE_DB_AUTOMIGRATE=false
-      - GOTRUE_DB_MIGRATIONS_PATH=""
-    depends_on:
-      db:
-        condition: service_healthy
-    command: ["/usr/local/bin/gotrue"]
-
-  supabase-rest:
-    image: postgrest/postgrest:v9.0.0
-    restart: always
-    environment:
-      - PGRST_DB_URI=postgresql://postgres:postgres@db:5432/postgres
-      - PGRST_DB_SCHEMA=public,auth,storage
-      - PGRST_DB_ANON_ROLE=anon
-      - PGRST_JWT_SECRET=thisisareallylongandsecuresecret
-    depends_on:
-      db:
-        condition: service_healthy
-
 volumes:
-  supabase_db:
+  db_data:

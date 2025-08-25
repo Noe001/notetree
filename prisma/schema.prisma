@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String        @id @default(uuid())
+  email       String        @unique
+  password    String
+  name        String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  memos       Memo[]
+  groups      GroupMember[]
+  ownedGroups Group[]       @relation("OwnedGroups")
+}
+
+model Memo {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  tags      Json     @default("[]")
+  isPrivate Boolean  @default(false) // 新規追加: メモの公開/非公開フラグ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  group     Group?   @relation(fields: [groupId], references: [id])
+  groupId   String?
+}
+
+model Group {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  owner       User          @relation("OwnedGroups", fields: [ownerId], references: [id])
+  ownerId     String
+  members     GroupMember[]
+  memos       Memo[]
+  invitations Invitation[]
+}
+
+model GroupMember {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  group     Group    @relation(fields: [groupId], references: [id])
+  groupId   String
+  role      UserRole @default(MEMBER) // OWNER, ADMIN, MEMBER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, groupId])
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Invitation {
+  id        String   @id @default(uuid())
+  email     String
+  group     Group    @relation(fields: [groupId], references: [id])
+  groupId   String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
