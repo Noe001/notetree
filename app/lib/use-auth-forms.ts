@@ -63,14 +63,8 @@ export function useAuthForms() {
       return false
     }
 
-    if (signUpForm.password.length < 8) {
-      setErrors({ password: 'パスワードは8文字以上で入力してください' })
-      return false
-    }
-
-    const passwordValidation = validators.password(signUpForm.password)
-    if (!passwordValidation.valid) {
-      setErrors({ password: passwordValidation.error! })
+    if (signUpForm.password.length < 6) {
+      setErrors({ password: 'パスワードは6文字以上で入力してください' })
       return false
     }
 

@@ -109,7 +109,7 @@ export async function DELETE(_req: NextRequest, context: any) {
     }
 
     await prisma.memo.delete({ where: { id: memoId } })
-    return NextResponse.json({ success: true, data: null }, { status: 204 })
+    return NextResponse.noContent()
   } catch (error: any) {
     console.error('Error deleting memo:', error)
     return NextResponse.json({ success: false, error: error.message || 'Something went wrong' }, { status: 500 })

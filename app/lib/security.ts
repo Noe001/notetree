@@ -83,38 +83,16 @@ export const validators = {
     return { valid: true }
   },
 
-  // パスワード強度チェック
+  // パスワード強度チェック（緩和版）
   password: (password: string): { valid: boolean; error?: string } => {
     if (!password.trim()) {
       return { valid: false, error: 'パスワードは必須です' }
     }
-    if (password.length < 8) {
-      return { valid: false, error: 'パスワードは8文字以上で入力してください' }
+    if (password.length < 6) {
+      return { valid: false, error: 'パスワードは6文字以上で入力してください' }
     }
     if (password.length > 128) {
       return { valid: false, error: 'パスワードが長すぎます' }
-    }
-    if (!/(?=.*[a-z])/.test(password)) {
-      return { valid: false, error: 'パスワードに小文字を含めてください' }
-    }
-    if (!/(?=.*[A-Z])/.test(password)) {
-      return { valid: false, error: 'パスワードに大文字を含めてください' }
-    }
-    if (!/(?=.*\d)/.test(password)) {
-      return { valid: false, error: 'パスワードに数字を含めてください' }
-    }
-    // 特殊文字のチェック（オプション）
-    if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) {
-      return { valid: false, error: 'パスワードに特殊文字を含めてください' }
-    }
-    // 連続文字のチェック
-    if (/(.)\1{2,}/.test(password)) {
-      return { valid: false, error: '同じ文字が3回以上連続するパスワードは使用できません' }
-    }
-    // 一般的なパスワードのチェック
-    const commonPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein']
-    if (commonPasswords.includes(password.toLowerCase())) {
-      return { valid: false, error: '一般的すぎるパスワードは使用できません' }
     }
     return { valid: true }
   },
