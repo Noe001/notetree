@@ -1,32 +1,31 @@
 import { test, expect } from '@playwright/test';
 
-test('shows login form when unauthenticated', async ({ page }) => {
-  await page.route('**/api/auth/me', route => route.fulfill({ status: 401, body: JSON.stringify({ success: false }) }));
-  await page.goto('/');
-  await expect(page.getByLabel('メールアドレス')).toBeVisible();
-});
+test.describe('unauthenticated', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/auth/me', route => route.fulfill({ status: 401, body: JSON.stringify({ success: false }) }));
+    await page.goto('/');
+  });
 
-test('login form accepts input', async ({ page }) => {
-  await page.route('**/api/auth/me', route => route.fulfill({ status: 401, body: JSON.stringify({ success: false }) }));
-  await page.goto('/');
-  await page.getByLabel('メールアドレス').fill('user@example.com');
-  await page.getByLabel('パスワード').fill('password');
-  await expect(page.getByLabel('メールアドレス')).toHaveValue('user@example.com');
-});
+  test('shows login form when unauthenticated', async ({ page }) => {
+    await expect(page.getByLabel('メールアドレス')).toBeVisible();
+  });
 
-test('can switch to sign up form', async ({ page }) => {
-  await page.route('**/api/auth/me', route => route.fulfill({ status: 401, body: JSON.stringify({ success: false }) }));
-  await page.goto('/');
-  await page.getByRole('button', { name: 'サインアップ' }).click();
-  await expect(page.getByLabel('ユーザー名')).toBeVisible();
-});
+  test('login form accepts input', async ({ page }) => {
+    await page.getByLabel('メールアドレス').fill('user@example.com');
+    await page.getByLabel('パスワード').fill('password');
+    await expect(page.getByLabel('メールアドレス')).toHaveValue('user@example.com');
+  });
 
-test('sign up form accepts input', async ({ page }) => {
-  await page.route('**/api/auth/me', route => route.fulfill({ status: 401, body: JSON.stringify({ success: false }) }));
-  await page.goto('/');
-  await page.getByRole('button', { name: 'サインアップ' }).click();
-  await page.getByLabel('ユーザー名').fill('tester');
-  await expect(page.getByLabel('ユーザー名')).toHaveValue('tester');
+  test('can switch to sign up form', async ({ page }) => {
+    await page.getByRole('button', { name: 'サインアップ' }).click();
+    await expect(page.getByLabel('ユーザー名')).toBeVisible();
+  });
+
+  test('sign up form accepts input', async ({ page }) => {
+    await page.getByRole('button', { name: 'サインアップ' }).click();
+    await page.getByLabel('ユーザー名').fill('tester');
+    await expect(page.getByLabel('ユーザー名')).toHaveValue('tester');
+  });
 });
 
 test('successful login shows memo app', async ({ page }) => {

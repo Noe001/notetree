@@ -3,16 +3,18 @@ import { config as dotenv } from 'dotenv';
 
 dotenv({ path: '.env.test', override: true });
 
+const baseURL = 'http://127.0.0.1:5174';
+
 export default defineConfig({
   testDir: './e2e',
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5174',
+    baseURL,
     headless: true,
   },
   webServer: {
     command: 'npm run dev',
-    url: 'http://127.0.0.1:5174',
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     env: {

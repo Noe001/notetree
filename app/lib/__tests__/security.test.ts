@@ -104,10 +104,13 @@ describe('security utilities', () => {
     expect(detectSQLInjection('hello')).toBe(false);
   });
 
-  test('validateSessionToken and validatePasswordStrength', () => {
+  test('validateSessionToken validates token format', () => {
     const token = 'a.b.c';
     expect(validateSessionToken(token)).toBe(true);
     expect(validateSessionToken('bad token')).toBe(false);
+  });
+
+  test('validatePasswordStrength evaluates password strength', () => {
     const strong = validatePasswordStrength('Aa1!aaaa');
     expect(strong.isValid).toBe(true);
     const weak = validatePasswordStrength('short');
@@ -121,22 +124,28 @@ describe('security utilities', () => {
     expect(validateCSRFToken(token, 'other')).toBe(false);
   });
 
-  test('rate limiter and secure random string', () => {
+  test('rate limiter works as expected', () => {
     const limiter = new RateLimiter(2, 1000);
     expect(limiter.isAllowed('id')).toBe(true);
     expect(limiter.isAllowed('id')).toBe(true);
     expect(limiter.isAllowed('id')).toBe(false);
+  });
+
+  test('generateSecureRandomString creates a string of the correct length', () => {
     const rand = generateSecureRandomString(10);
     expect(rand).toHaveLength(10);
   });
 
-  test('validate file upload and headers', () => {
+  test('validateFileUpload validates file properties', () => {
     const file = new File(['hi'], 'test.txt', { type: 'text/plain' });
     expect(validateFileUpload(file).isValid).toBe(true);
     const bigFile = new File([new Uint8Array(11 * 1024 * 1024)], 'big.png', { type: 'image/png' });
     expect(validateFileUpload(bigFile).isValid).toBe(false);
     const badType = new File(['hi'], 'bad.exe', { type: 'application/x-msdownload' });
     expect(validateFileUpload(badType).isValid).toBe(false);
+  });
+
+  test('getSecurityHeaders returns expected headers', () => {
     const headers = getSecurityHeaders();
     expect(headers['X-Frame-Options']).toBe('DENY');
   });
