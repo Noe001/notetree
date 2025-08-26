@@ -50,6 +50,6 @@ test('successful login shows memo app', async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await page.getByLabel('メールアドレス').fill('user@example.com');
   await page.getByLabel('パスワード').fill('password');
-  await page.locator('form').getByRole('button', { name: /ログイン/ }).click({ force: true });
+  await page.locator('form').getByRole('button', { name: /ログイン/ }).click();
   await expect(page.getByRole('button', { name: '新しいメモを作成' })).toBeVisible();
 });

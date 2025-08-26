@@ -12,7 +12,7 @@ import {
   validatePasswordStrength,
   generateCSRFToken,
   validateCSRFToken,
-  rateLimiter,
+  RateLimiter,
   generateSecureRandomString,
   validateFileUpload,
   getSecurityHeaders
@@ -122,7 +122,7 @@ describe('security utilities', () => {
   });
 
   test('rate limiter and secure random string', () => {
-    const limiter = new (rateLimiter.constructor as any)(2, 1000);
+    const limiter = new RateLimiter(2, 1000);
     expect(limiter.isAllowed('id')).toBe(true);
     expect(limiter.isAllowed('id')).toBe(true);
     expect(limiter.isAllowed('id')).toBe(false);
