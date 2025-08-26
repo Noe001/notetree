@@ -1,12 +1,26 @@
-const nextJest = require('next/jest')();
+const nextJest = require('next/jest')({ dir: './' });
 
 module.exports = nextJest({
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/app/$1',
-    // serverやappのエイリアスは使われていないため削除
   },
   transform: {
     '^.+\\.(t|j)sx?$': ['@swc/jest'],
+  },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  collectCoverageFrom: [
+    'app/lib/local-memo-storage.ts',
+    'app/lib/security.ts',
+    'app/lib/utils.ts'
+  ],
+  testPathIgnorePatterns: ['<rootDir>/e2e/'],
+  coverageThreshold: {
+    global: {
+      statements: 90,
+      branches: 80,
+      functions: 90,
+      lines: 90,
+    },
   },
 });

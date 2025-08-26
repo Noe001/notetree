@@ -50,3 +50,9 @@
 2. フォーム送信後の画面遷移確認
 3. ログイン機能のテスト
 
+
+## 3. 自動テスト結果
+
+- `npm run test:cov`
+- `npm run test:e2e`
+- `npm run test:all`
