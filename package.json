@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "jest --runInBand",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",
@@ -43,6 +45,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@swc/jest": "^0.2.39",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/react": "^16.3.0",
@@ -53,12 +56,14 @@
     "@types/node": "24.1.0",
     "@types/react-dom": "^19.1.7",
     "@types/uuid": "^10.0.0",
+    "dotenv": "^17.2.1",
     "dotenv-cli": "^10.0.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.4.5",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "tailwindcss": "^3.4.15",
+    "ts-jest": "^29.4.1",
     "typescript": "^5.8.3"
   }
 }

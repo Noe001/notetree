@@ -240,7 +240,7 @@ export function validateCSRFToken(token: string, storedToken: string): boolean {
 /**
  * レート制限の実装
  */
-class RateLimiter {
+export class RateLimiter {
   private requests = new Map<string, { count: number; resetTime: number }>();
   
   constructor(

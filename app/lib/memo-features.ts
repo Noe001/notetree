@@ -1,8 +1,11 @@
 import React from 'react'
 import { useAuth } from './auth-context'
 import { apiClient, Memo, CreateMemoDto, ApiResponse } from './api'
+import type { TextOp, UpdateMemoDiffDto } from '@/types'
 
-const API_BASE_URL = 'http://localhost:3000' // Next.jsアプリ自身のAPIルートを指すように変更
+const API_BASE_URL = typeof window !== 'undefined'
+  ? window.location.origin
+  : (process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:3000')
 
 // バージョン履歴関連
 export interface MemoVersion {
@@ -165,64 +168,105 @@ function debounce<T extends (...args: any[]) => void>(func: T, delay: number): (
 export function useRealtimeMemoSave(
   currentMemo: Memo | null, // 現在編集中のメモ、新規作成中はnull
   onMemoSaved: (memo: Memo) => void, // 保存成功時のコールバック (新規作成時のID取得など)
-  autoSaveDelay: number = 1000 // デバウンスの遅延時間（ミリ秒）
+  autoSaveDelay: number = 1000 // デバウンスの遅延時間（ミリ秒）。0以下で即時保存（デバウンス無効）
 ) {
   const { createMemo, updateMemo, currentUser } = useMemoFeatures();
   const [isSaving, setIsSaving] = React.useState(false);
   const [lastSaved, setLastSaved] = React.useState<Date | null>(null);
+  const inFlightRef = React.useRef(false);
+  const queuedRef = React.useRef<{ payload: CreateMemoDto | Partial<Memo>; memoId: string | null } | null>(null);
 
   // 直近のテキストスナップショットを保持し、メモ切替時や非テキスト変更での保存を防ぐ
   const previousSnapshotRef = React.useRef<{
     memoId: string | null;
     title: string;
     content: string;
-    tagsKey: string; // tags の JSON 文字列化
+    updatedAt: string | null;
   } | null>(null);
 
+  // 単純スプライズ差分（1箇所の置換）を計算
+  const computeSingleSplice = React.useCallback((before: string, after: string): { pos: number; del: number; insert: string } | null => {
+    if (before === after) return null;
+    const lenBefore = before.length;
+    const lenAfter = after.length;
+    let start = 0;
+    const maxStart = Math.min(lenBefore, lenAfter);
+    while (start < maxStart && before[start] === after[start]) start++;
+
+    let endBefore = lenBefore - 1;
+    let endAfter = lenAfter - 1;
+    while (endBefore >= start && endAfter >= start && before[endBefore] === after[endAfter]) {
+      endBefore--;
+      endAfter--;
+    }
+
+    const pos = start;
+    const del = endBefore - start + 1;
+    const insert = after.slice(start, endAfter + 1);
+    return { pos, del: Math.max(0, del), insert };
+  }, []);
+
+  const performSave = React.useCallback(async (memoToSave: CreateMemoDto | Partial<Memo>, memoId: string | null, channel: 'immediate' | 'debounced') => {
+    if (!currentUser) {
+      console.warn('ユーザーが認証されていないため、メモは保存されません。');
+      return;
+    }
+    if (inFlightRef.current) {
+      queuedRef.current = { payload: memoToSave, memoId };
+      return;
+    }
+
+    inFlightRef.current = true;
+    setIsSaving(true);
+    try {
+      let response: ApiResponse<Memo>;
+      if (memoId && !memoId.startsWith('temp-')) {
+        response = await updateMemo(memoId, memoToSave as Partial<Memo>);
+      } else {
+        response = await createMemo(memoToSave as CreateMemoDto);
+      }
+
+      if (response.success && response.data) {
+        setLastSaved(new Date());
+        onMemoSaved(response.data);
+      } else {
+        console.error('メモの保存に失敗しました:', response.error);
+      }
+    } catch (error) {
+      console.error('メモ保存エラー:', error);
+    } finally {
+      setIsSaving(false);
+      inFlightRef.current = false;
+      // 直近のキューがあれば直ちに保存（最新のみ）
+      const queued = queuedRef.current;
+      queuedRef.current = null;
+      if (queued) {
+        // バトンを繋いで直ちに実行
+        void performSave(queued.payload, queued.memoId, channel);
+      }
+    }
+  }, [createMemo, updateMemo, currentUser, onMemoSaved]);
+
   const debouncedSave = React.useCallback(
-    debounce(async (memoToSave: CreateMemoDto | Partial<Memo>, memoId: string | null) => {
-      if (!currentUser) {
-        console.warn('ユーザーが認証されていないため、メモは保存されません。');
-        return;
-      }
-
-      setIsSaving(true);
-      try {
-        let response: ApiResponse<Memo>;
-        // temporary ID (e.g., "temp-12345") indicates a new memo that needs to be created
-        if (memoId && !memoId.startsWith('temp-')) {
-          // 既存のメモを更新
-          response = await updateMemo(memoId, memoToSave as Partial<Memo>);
-        } else {
-          // 新規メモを作成
-          response = await createMemo(memoToSave as CreateMemoDto);
-        }
-
-        if (response.success && response.data) {
-          setLastSaved(new Date());
-          onMemoSaved(response.data); // 新規作成時のIDや更新後のメモを親コンポーネントに伝える
-        } else {
-          console.error('メモの保存に失敗しました:', response.error);
-        }
-      } catch (error) {
-        console.error('メモ保存エラー:', error);
-      } finally {
-        setIsSaving(false);
-      }
+    debounce((memoToSave: CreateMemoDto | Partial<Memo>, memoId: string | null) => {
+      void performSave(memoToSave, memoId, 'debounced');
     }, autoSaveDelay),
-    [createMemo, updateMemo, currentUser, onMemoSaved, autoSaveDelay]
+    [performSave, autoSaveDelay]
   );
+
+  const saveImmediately = React.useCallback((memoToSave: CreateMemoDto | Partial<Memo>, memoId: string | null) => {
+    void performSave(memoToSave, memoId, 'immediate');
+  }, [performSave]);
 
   // メモ内容(タイトル/本文/タグ)の変更のみ監視し、自動保存をトリガー
   React.useEffect(() => {
     if (!currentMemo) return;
 
-    const tagsKey = JSON.stringify(currentMemo.tags || []);
     const snapshot = {
       memoId: currentMemo.id || null,
       title: currentMemo.title || '',
       content: currentMemo.content || '',
-      tagsKey,
+      updatedAt: currentMemo.updatedAt || null,
     };
 
     const prev = previousSnapshotRef.current;
@@ -234,27 +278,50 @@ export function useRealtimeMemoSave(
     }
 
     // テキスト変更がない場合は何もしない
-    const hasTextChanges =
-      prev.title !== snapshot.title ||
-      prev.content !== snapshot.content ||
-      prev.tagsKey !== snapshot.tagsKey;
+    const hasTextChanges = prev.title !== snapshot.title || prev.content !== snapshot.content;
 
     if (!hasTextChanges) return;
 
-    // 保存対象データ（文字入力/消去の変更のみ）
-    const dataToSave: CreateMemoDto | Partial<Memo> = {
-      title: snapshot.title,
-      content: snapshot.content,
-      tags: JSON.parse(snapshot.tagsKey),
-      isPrivate: currentMemo.isPrivate, // API要件上含めるが、トリガーはテキストのみ
-      groupId: currentMemo.groupId,
-    };
+    // 差分を構築（タイトル/本文それぞれ1スプライズ）
+    const ops: TextOp[] = [];
+    const titleOp = computeSingleSplice(prev.title, snapshot.title);
+    if (titleOp) ops.push({ field: 'title', pos: titleOp.pos, del: titleOp.del, insert: titleOp.insert });
+    const contentOp = computeSingleSplice(prev.content, snapshot.content);
+    if (contentOp) ops.push({ field: 'content', pos: contentOp.pos, del: contentOp.del, insert: contentOp.insert });
 
-    debouncedSave(dataToSave, currentMemo.id);
+    // 既存メモは差分更新、新規(temp-*)はフル作成
+    let dataToSave: any;
+    if (currentMemo.id && currentMemo.id.startsWith('temp-')) {
+      dataToSave = {
+        title: snapshot.title,
+        content: snapshot.content,
+        tags: currentMemo.tags || [],
+        isPrivate: currentMemo.isPrivate,
+        groupId: currentMemo.groupId,
+      } as CreateMemoDto;
+    } else {
+      dataToSave = {
+        baseUpdatedAt: prev.updatedAt || currentMemo.updatedAt,
+        ops,
+        full: { title: snapshot.title, content: snapshot.content },
+        meta: {
+          tags: currentMemo.tags || [],
+          isPrivate: currentMemo.isPrivate,
+          groupId: currentMemo.groupId,
+        },
+      } as UpdateMemoDiffDto;
+    }
+
+    if (autoSaveDelay && autoSaveDelay > 0) {
+      debouncedSave(dataToSave, currentMemo.id);
+    } else {
+      // デバウンス無効時は即時保存（入力/削除イベントの回数に比例）
+      saveImmediately(dataToSave, currentMemo.id);
+    }
 
     // 直ちにスナップショットを更新（デバウンス中の連続入力に対応）
     previousSnapshotRef.current = snapshot;
-  }, [currentMemo?.id, currentMemo?.title, currentMemo?.content, JSON.stringify(currentMemo?.tags), currentMemo?.isPrivate, currentMemo?.groupId, debouncedSave]);
+  }, [currentMemo?.id, currentMemo?.title, currentMemo?.content, computeSingleSplice, debouncedSave, saveImmediately, autoSaveDelay]);
 
   return { isSaving, lastSaved };
 }

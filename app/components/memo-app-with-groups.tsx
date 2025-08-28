@@ -323,37 +323,61 @@ const MemoEditor = ({ memo, onToggleSidebar, onDeleteMemo, onShareMemo, isRightS
     }
   }, [memo]);
 
-  // 自動保存機能
+  // 自動保存機能（文字列の編集ごとに即時保存。タグ変更のみでは保存しない）
   useEffect(() => {
     if (!memo || !onUpdateMemo) return;
 
-    const saveTimeout = setTimeout(async () => {
-      // 変更がある場合のみ保存
-      const hasChanges = 
-        title !== memo.title || 
-        tags !== memo.tags.join(', ') || 
-        content !== memo.content;
+    const beforeTitle = memo.title || '';
+    const afterTitle = title || '';
+    const beforeContent = memo.content || '';
+    const afterContent = content || '';
 
-      if (hasChanges) {
-        try {
-          setIsSaving(true);
-          const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-          await onUpdateMemo(memo.id, {
-            title,
-            content,
-            tags: tagArray
-          });
-          setLastSaved(new Date().toLocaleTimeString('ja-JP'));
-        } catch (error) {
-          console.error('自動保存エラー:', error);
-        } finally {
-          setIsSaving(false);
+    const computeSplice = (a: string, b: string) => {
+      if (a === b) return null;
+      let s = 0; const maxS = Math.min(a.length, b.length);
+      while (s < maxS && a[s] === b[s]) s++;
+      let ea = a.length - 1, eb = b.length - 1;
+      while (ea >= s && eb >= s && a[ea] === b[eb]) { ea--; eb--; }
+      const pos = s; const del = Math.max(0, ea - s + 1); const insert = b.slice(s, eb + 1);
+      return { pos, del, insert };
+    };
+
+    const ops: any[] = [];
+    const tOp = computeSplice(beforeTitle, afterTitle); if (tOp) ops.push({ field: 'title', ...tOp });
+    const cOp = computeSplice(beforeContent, afterContent); if (cOp) ops.push({ field: 'content', ...cOp });
+    if (ops.length === 0) return;
+
+    (async () => {
+      try {
+        setIsSaving(true);
+        const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        if (memo.id.startsWith('temp-') || memo.id === 'new-memo') {
+          // まだ永続化されていないメモは作成
+          await onCreateMemo?.({
+            title: afterTitle,
+            content: afterContent,
+            tags: tagArray,
+            isPrivate: memo.isPrivate,
+            groupId: memo.groupId ?? null,
+          } as any);
+        } else {
+          // 既存メモは差分更新
+          const payload: any = {
+            baseUpdatedAt: memo.updatedAt,
+            ops,
+            full: { title: afterTitle, content: afterContent },
+            meta: { tags: tagArray, isPrivate: memo.isPrivate, groupId: memo.groupId ?? null },
+          };
+          await onUpdateMemo?.(memo.id, payload as any);
         }
+        setLastSaved(new Date().toLocaleTimeString('ja-JP'));
+      } catch (error) {
+        console.error('自動保存エラー:', error);
+      } finally {
+        setIsSaving(false);
       }
-    }, 1000); // 1秒後に自動保存
-
-    return () => clearTimeout(saveTimeout);
-  }, [title, tags, content, memo, onUpdateMemo]);
+    })();
+  }, [title, content, memo, onUpdateMemo, tags]);
 
   if (!memo) {
     return (

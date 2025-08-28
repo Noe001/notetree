@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("PRISMA_DATABASE_URL")
 }
 
 model User {
@@ -34,6 +34,7 @@ model Memo {
   authorId  String
   group     Group?   @relation(fields: [groupId], references: [id])
   groupId   String?
+  versions  MemoVersion[]
 }
 
 model Group {
@@ -77,4 +78,21 @@ model Invitation {
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// 変更履歴（差分またはスナップショット）
+model MemoVersion {
+  id        String   @id @default(uuid())
+  memo      Memo     @relation(fields: [memoId], references: [id])
+  memoId    String
+  version   Int
+  title     String
+  content   String
+  tags      Json
+  createdAt DateTime @default(now())
+  createdBy String
+  changeType String
+  ops       Json?
+
+  @@unique([memoId, version])
 }

@@ -68,6 +68,29 @@ export interface UpdateMemoDto {
   tags?: string[];
 }
 
+// 差分適用用のテキスト操作（単一スプライズ）
+export interface TextOp {
+  field: 'title' | 'content';
+  pos: number;      // 適用位置（文字インデックス）
+  del: number;      // 削除文字数
+  insert?: string;  // 挿入文字列（省略時は空）
+}
+
+// 差分更新DTO（Simplenote風）
+export interface UpdateMemoDiffDto {
+  baseUpdatedAt: string;    // クライアントが編集開始時に認識していたupdatedAt
+  ops: TextOp[];            // タイトル/本文に対する差分操作
+  full?: {                  // コンフリクト時の最終文字列（LWW用フォールバック）
+    title?: string;
+    content?: string;
+  };
+  meta?: {                  // 付帯情報（保存トリガーではない）
+    isPrivate?: boolean;
+    groupId?: string | null;
+    tags?: string[];
+  };
+}
+
 export interface Invitation {
   id: string;
   groupId: string;

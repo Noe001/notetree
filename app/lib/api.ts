@@ -1,5 +1,5 @@
 import { withPerformanceMonitoring } from './performance';
-import type { ApiResponse, User, Group, GroupMember, Invitation, Memo, CreateMemoDto } from '@/types';
+import type { ApiResponse, User, Group, GroupMember, Invitation, Memo, CreateMemoDto, UpdateMemoDto, UpdateMemoDiffDto } from '@/types';
 import { notifyError } from '@/lib/notify';
 import { logger } from '@/lib/logger';
 
@@ -176,7 +176,7 @@ class ApiClient {
     }
   }
 
-  async updateMemo(id: string, updates: Partial<CreateMemoDto>): Promise<ApiResponse<Memo>> {
+  async updateMemo(id: string, updates: UpdateMemoDto | UpdateMemoDiffDto): Promise<ApiResponse<Memo>> {
     try {
       return this.request(`/api/memos/${id}`, {
         method: 'PATCH',
