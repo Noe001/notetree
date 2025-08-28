@@ -18,12 +18,12 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
     env: {
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-      NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
-      JWT_SECRET: process.env.JWT_SECRET,
-      DATABASE_URL: process.env.DATABASE_URL,
-      NEXT_PUBLIC_ENABLE_MOCK: process.env.NEXT_PUBLIC_ENABLE_MOCK,
-      INTERNAL_API_TOKEN: process.env.INTERNAL_API_TOKEN,
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? '',
+      NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL ?? '',
+      JWT_SECRET: process.env.JWT_SECRET ?? '',
+      DATABASE_URL: process.env.DATABASE_URL ?? '',
+      NEXT_PUBLIC_ENABLE_MOCK: process.env.NEXT_PUBLIC_ENABLE_MOCK ?? '',
+      INTERNAL_API_TOKEN: process.env.INTERNAL_API_TOKEN ?? '',
     },
   },
   projects: [

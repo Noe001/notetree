@@ -118,7 +118,13 @@ describe('useRealtimeMemoSave', () => {
     })
 
     expect(mockUpdateMemo).toHaveBeenCalledTimes(1)
-    expect(mockUpdateMemo).toHaveBeenCalledWith('memo-1', expect.objectContaining({ title: 'A2', content: 'X', tags: [] }))
+    const calledArg = (mockUpdateMemo.mock.calls[0] as any[])[1]
+    expect(calledArg).toHaveProperty('ops')
+    expect(calledArg.ops).toEqual(expect.arrayContaining([
+      expect.objectContaining({ field: 'title' }),
+    ]))
+    expect(calledArg).toHaveProperty('baseUpdatedAt')
+    expect(calledArg.full).toEqual(expect.objectContaining({ title: 'A2', content: 'X' }))
     // isSaving/lastSavedの更新が走ること（値自体はモックで十分）
     expect(result.current.isSaving).toBe(false)
     expect(result.current.lastSaved).toBeInstanceOf(Date)
@@ -165,7 +171,8 @@ describe('useRealtimeMemoSave', () => {
 
     expect(mockUpdateMemo).not.toHaveBeenCalled()
     expect(mockCreateMemo).toHaveBeenCalledTimes(1)
-    expect(mockCreateMemo).toHaveBeenCalledWith(expect.objectContaining({ title: 'New', content: 'Body', tags: [] }))
+    const createArg = (mockCreateMemo.mock.calls[0] as any[])[0]
+    expect(createArg).toEqual(expect.objectContaining({ title: 'New', content: 'Body', tags: [] }))
   })
 
   it('保存成功時にonMemoSavedが呼ばれる', async () => {
@@ -190,5 +197,4 @@ describe('useRealtimeMemoSave', () => {
     expect(savedHandler.mock.calls[0][0]).toEqual(expect.objectContaining({ id: 'memo-3' }))
   })
 })
-
 

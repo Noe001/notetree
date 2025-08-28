@@ -14,7 +14,7 @@ module.exports = nextJest({
     'app/lib/security.ts',
     'app/lib/utils.ts'
   ],
-  testPathIgnorePatterns: ['<rootDir>/e2e/'],
+  testPathIgnorePatterns: ['<rootDir>/e2e/', '<rootDir>/scripts/'],
   coverageThreshold: {
     global: {
       statements: 90,

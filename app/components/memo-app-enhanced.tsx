@@ -316,44 +316,65 @@ const MemoEditor = ({ memo, onMemoSaved, onMemoUpdatedInList }: MemoEditorProps)
   // const [newMemoTags, setNewMemoTags] = useState<string[]>([]); // 削除
   // const [newMemoIsPrivate, setNewMemoIsPrivate] = useState(false); // 削除
 
-  // useRealtimeMemoSaveフックを統合
-  const { isSaving, lastSaved } = useRealtimeMemoSave(
-    memo, // 現在のメモオブジェクトを渡す
-    (savedMemo) => {
-      // 保存されたメモが新しいメモ（仮IDを持つ）であれば、リストを更新
-      if (memo && memo.id.startsWith('temp-') && savedMemo.id !== memo.id) {
-        onMemoSaved(savedMemo); // 新しいIDを持つメモでリストを更新するためにAppに通知
-      } else if (memo) {
-        // 既存のメモが更新された場合
-        onMemoUpdatedInList(savedMemo);
-      }
+  // useRealtimeMemoSaveフックを統合 + ローカル編集中の値を保持
+  const lastServerUpdateRef = React.useRef<number>(0);
+  const [localTitle, setLocalTitle] = useState('');
+  const [localTagsInput, setLocalTagsInput] = useState('');
+  const [localContent, setLocalContent] = useState('');
+  const [localPrivate, setLocalPrivate] = useState(false);
+
+  useEffect(() => {
+    if (memo) {
+      setLocalTitle(memo.title || '');
+      setLocalTagsInput((memo.tags || []).join(', '));
+      setLocalContent(memo.content || '');
+      setLocalPrivate(!!memo.isPrivate);
     }
+  }, [memo?.id]);
+
+  const localTagsArray = useMemo(() => localTagsInput.split(',').map(t => t.trim()).filter(Boolean), [localTagsInput]);
+
+  const workingMemo = useMemo(() => {
+    if (!memo) return null;
+    return {
+      ...memo,
+      title: localTitle,
+      content: localContent,
+      tags: localTagsArray,
+      isPrivate: localPrivate,
+    } as Memo;
+  }, [memo, localTitle, localContent, localTagsArray, localPrivate]);
+
+  const { isSaving, lastSaved } = useRealtimeMemoSave(
+    workingMemo, // ローカル編集を反映したメモオブジェクトを渡す
+    (savedMemo) => {
+      const savedTs = new Date(savedMemo.updatedAt).getTime();
+      const lastTs = lastServerUpdateRef.current || 0;
+      // 過去の応答（古いupdatedAt）は無視してUIを巻き戻さない
+      if (savedTs < lastTs) {
+        return;
+      }
+      lastServerUpdateRef.current = savedTs;
+      // 返却内容が現在のローカル編集より古い/少ない変更なら、UIを巻き戻さないようマージ
+      const mergedForUi = workingMemo ? { ...savedMemo, title: workingMemo.title, content: workingMemo.content } : savedMemo;
+
+      // 同一内容ならUI更新をスキップ（点滅・キャレットジャンプ抑制）
+      if (memo && savedMemo.title === workingMemo?.title && savedMemo.content === workingMemo?.content) {
+        return;
+      }
+
+      // 保存されたメモが新しいメモ（仮IDを持つ）であれば、IDだけ置換しつつ内容はローカルを優先
+      if (memo && memo.id.startsWith('temp-') && savedMemo.id !== memo.id) {
+        onMemoSaved(mergedForUi);
+      } else if (memo) {
+        // 既存のメモが更新された場合もローカル内容を維持
+        onMemoUpdatedInList(mergedForUi);
+      }
+    },
+    0 // デバウンス無効: 入力/削除ごとに保存
   );
 
-  // 入力変更ハンドラを統合
-  const handleInputChange = useCallback((
-    field: keyof Omit<Memo, 'id' | 'createdAt' | 'updatedAt' | 'userId'>,
-    value: string | boolean | string[]
-  ) => {
-    if (!memo) return; // メモがnullの場合は何もしない
-
-    let updatedMemo: Memo = { ...memo };
-
-    if (field === 'tags') {
-      updatedMemo = {
-        ...updatedMemo,
-        tags: Array.isArray(value) ? value : String(value).split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-      };
-    } else if (typeof value === 'boolean') {
-      updatedMemo = { ...updatedMemo, [field]: value };
-    } else {
-      updatedMemo = { ...updatedMemo, [field]: String(value) };
-    }
-
-    // ここで直接selectedMemoを更新するのではなく、親コンポーネントに更新されたメモを伝える
-    // なぜなら、リアルタイム保存はdebounceされているため、UI上の即時反映とAPIへの反映を分離するため
-    onMemoUpdatedInList(updatedMemo);
-  }, [memo, onMemoUpdatedInList]);
+  // 親への即時反映はせず、ローカル状態で入力保持（保存完了時に親を更新）
 
   if (!memo) {
     return (
@@ -374,31 +395,31 @@ const MemoEditor = ({ memo, onMemoSaved, onMemoUpdatedInList }: MemoEditorProps)
     <main className="flex-1 flex flex-col bg-background">
       <div className="p-6 space-y-4 flex-1 flex flex-col overflow-y-auto">
         <Input
-          value={memo.title} // memoの状態にバインド
+          value={localTitle}
           placeholder="タイトル *"
           className="text-2xl font-bold border-none focus-visible:ring-0 shadow-none p-0 h-auto"
-          onChange={(e) => handleInputChange('title', e.target.value)}
+          onChange={(e) => setLocalTitle(e.target.value)}
         />
         <Input
-          value={memo.tags.join(', ')} // memoの状態にバインド
+          value={localTagsInput}
           placeholder="カンマ区切りでタグを追加"
           className="border-none focus-visible:ring-0 shadow-none p-0 text-sm h-auto"
-          onChange={(e) => handleInputChange('tags', e.target.value)}
+          onChange={(e) => setLocalTagsInput(e.target.value)}
         />
         <Separator />
         <Textarea
-          value={memo.content} // memoの状態にバインド
+          value={localContent}
           placeholder="内容を記述... *"
           className="flex-1 w-full resize-none border-none focus-visible:ring-0 shadow-none p-0 text-base leading-relaxed"
-          onChange={(e) => handleInputChange('content', e.target.value)}
+          onChange={(e) => setLocalContent(e.target.value)}
         />
       </div>
       <div className="p-4 border-t flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Switch
             id="memo-private-switch"
-            checked={memo.isPrivate} // memoの状態にバインド
-            onChange={(e) => handleInputChange('isPrivate', e.target.checked)} // 変更後
+            checked={localPrivate}
+            onChange={(e) => setLocalPrivate(e.target.checked)}
           />
           <Label htmlFor="memo-private-switch">プライベートメモ</Label>
         </div>
@@ -769,14 +790,20 @@ export default function MemoAppEnhanced() {
 
   // MemoEditorから新規作成されたメモ（仮IDから実際のIDに変わったメモ）を処理
   const handleNewMemoSaved = useCallback((newlyCreatedMemo: Memo) => {
+    // 選択中がtemp系ならそのIDのみ置換。それ以外は既存配列に先頭追加。
+    const tempId = selectedMemo && selectedMemo.id.startsWith('temp-') ? selectedMemo.id : undefined;
     setMemos(prevMemos => {
-      const updatedMemos = prevMemos.map(memo => (memo.id.startsWith('temp-')) ? newlyCreatedMemo : memo); // 仮IDのメモを実際のメモに置き換え
-      updateAllTags(updatedMemos); // 更新後のメモリストでタグを更新
+      if (tempId) {
+        const updatedMemos = prevMemos.map(m => (m.id === tempId ? newlyCreatedMemo : m));
+        updateAllTags(updatedMemos);
+        return updatedMemos;
+      }
+      const updatedMemos = [newlyCreatedMemo, ...prevMemos];
+      updateAllTags(updatedMemos);
       return updatedMemos;
     });
-    setSelectedMemo(newlyCreatedMemo); // 選択中のメモも更新
-    // updateAllTagsはsetMemosのコールバック内で呼ばれるため、ここでは不要
-  }, [memos]);
+    setSelectedMemo(newlyCreatedMemo);
+  }, [selectedMemo]);
 
   const filteredAndSortedMemos = useMemo(() => {
     let filtered = memos.filter(memo => {
@@ -1153,13 +1180,12 @@ export default function MemoAppEnhanced() {
       <ExportImportDialog 
         open={isExportImportDialogOpen} 
         onOpenChange={setExportImportDialogOpen}
-        onExport={async (format) => {
+        onExport={async (_format) => {
           // TODO: エクスポート機能実装
-          console.log('Export in format:', format);
+          return; // no-op
         }}
-        onImport={async (data) => {
+        onImport={async (_data) => {
           // TODO: インポート機能実装
-          console.log('Import data:', data);
           return true; // 成功を示す
         }}
       />
@@ -1171,4 +1197,3 @@ export default function MemoAppEnhanced() {
     </div>
   );
 }
-

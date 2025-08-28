@@ -237,7 +237,7 @@ export function useMemos(userId?: string, groupId?: string) {
     }
   }, [fetchMemos, invalidateCache]);
 
-  const updateMemo = useCallback(async (id: string, memoData: Partial<Memo>) => {
+  const updateMemo = useCallback(async (id: string, memoData: import('@/types').UpdateMemoDto | import('@/types').UpdateMemoDiffDto) => {
     try {
       const response = await apiClient.updateMemo(id, memoData);
       if (response.success) {
